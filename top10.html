@@ -181,6 +181,62 @@
     </div>
   </section>
 
+  <section class="category" data-category="capitali">
+    <div class="category-heading">🏛️ Top 10 Capitali</div>
+    <div class="person-group" data-cat="capitali" data-person="gamba">
+      <div class="person-heading">Gamba</div>
+      <div class="tt-list" id="list-capitali-gamba"></div>
+      <div class="search" data-cat="capitali" data-person="gamba">
+        <input type="text" placeholder="Cerca una capitale…" autocomplete="off" aria-label="Cerca una capitale da aggiungere per Gamba">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="capitali" data-person="beppe">
+      <div class="person-heading">Beppe</div>
+      <div class="tt-list" id="list-capitali-beppe"></div>
+      <div class="search" data-cat="capitali" data-person="beppe">
+        <input type="text" placeholder="Cerca una capitale…" autocomplete="off" aria-label="Cerca una capitale da aggiungere per Beppe">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="capitali" data-person="rutix">
+      <div class="person-heading">Rutix</div>
+      <div class="tt-list" id="list-capitali-rutix"></div>
+      <div class="search" data-cat="capitali" data-person="rutix">
+        <input type="text" placeholder="Cerca una capitale…" autocomplete="off" aria-label="Cerca una capitale da aggiungere per Rutix">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="category" data-category="cacca">
+    <div class="category-heading">💩 Top 10 💩</div>
+    <div class="person-group" data-cat="cacca" data-person="gamba">
+      <div class="person-heading">Gamba</div>
+      <div class="tt-list" id="list-cacca-gamba"></div>
+      <div class="search" data-cat="cacca" data-person="gamba">
+        <input type="text" placeholder="Aggiungi un posto…" autocomplete="off" aria-label="Aggiungi un posto per Gamba">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="cacca" data-person="beppe">
+      <div class="person-heading">Beppe</div>
+      <div class="tt-list" id="list-cacca-beppe"></div>
+      <div class="search" data-cat="cacca" data-person="beppe">
+        <input type="text" placeholder="Aggiungi un posto…" autocomplete="off" aria-label="Aggiungi un posto per Beppe">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="cacca" data-person="rutix">
+      <div class="person-heading">Rutix</div>
+      <div class="tt-list" id="list-cacca-rutix"></div>
+      <div class="search" data-cat="cacca" data-person="rutix">
+        <input type="text" placeholder="Aggiungi un posto…" autocomplete="off" aria-label="Aggiungi un posto per Rutix">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+  </section>
+
   <footer class="footer">
     <span>Salvato per tutti, in tempo reale</span>
     <span id="sync-status" hidden></span>
@@ -343,9 +399,92 @@
     { name: "Delhi", code: "IN" }, { name: "Jaipur", code: "IN" }, { name: "Goa", code: "IN" }
   ].sort(function (a, b) { return a.name.localeCompare(b.name, "it"); });
 
+  var CAPITALI_OPTIONS = [
+    { name: "Kabul", code: "AF" }, { name: "Tirana", code: "AL" },
+    { name: "Andorra la Vella", code: "AD" }, { name: "Riad", code: "SA" },
+    { name: "Buenos Aires", code: "AR" }, { name: "Yerevan", code: "AM" },
+    { name: "Canberra", code: "AU" }, { name: "Vienna", code: "AT" },
+    { name: "Baku", code: "AZ" }, { name: "Nassau", code: "BS" },
+    { name: "Manama", code: "BH" }, { name: "Dacca", code: "BD" },
+    { name: "Bruxelles", code: "BE" }, { name: "Minsk", code: "BY" },
+    { name: "Naypyidaw", code: "MM" }, { name: "La Paz", code: "BO" },
+    { name: "Sarajevo", code: "BA" }, { name: "Gaborone", code: "BW" },
+    { name: "Brasilia", code: "BR" }, { name: "Sofia", code: "BG" },
+    { name: "Ouagadougou", code: "BF" }, { name: "Phnom Penh", code: "KH" },
+    { name: "Yaoundé", code: "CM" }, { name: "Ottawa", code: "CA" },
+    { name: "Praia", code: "CV" }, { name: "N'Djamena", code: "TD" },
+    { name: "Santiago", code: "CL" }, { name: "Pechino", code: "CN" },
+    { name: "Nicosia", code: "CY" }, { name: "Città del Vaticano", code: "VA" },
+    { name: "Bogotà", code: "CO" }, { name: "Pyongyang", code: "KP" },
+    { name: "Seoul", code: "KR" }, { name: "Yamoussoukro", code: "CI" },
+    { name: "San José", code: "CR" }, { name: "Zagabria", code: "HR" },
+    { name: "L'Avana", code: "CU" }, { name: "Copenaghen", code: "DK" },
+    { name: "Quito", code: "EC" }, { name: "Il Cairo", code: "EG" },
+    { name: "San Salvador", code: "SV" }, { name: "Abu Dhabi", code: "AE" },
+    { name: "Asmara", code: "ER" }, { name: "Tallinn", code: "EE" },
+    { name: "Addis Abeba", code: "ET" }, { name: "Suva", code: "FJ" },
+    { name: "Manila", code: "PH" }, { name: "Helsinki", code: "FI" },
+    { name: "Parigi", code: "FR" }, { name: "Libreville", code: "GA" },
+    { name: "Banjul", code: "GM" }, { name: "Tbilisi", code: "GE" },
+    { name: "Berlino", code: "DE" }, { name: "Accra", code: "GH" },
+    { name: "Kingston", code: "JM" }, { name: "Tokyo", code: "JP" },
+    { name: "Amman", code: "JO" }, { name: "Atene", code: "GR" },
+    { name: "Nuuk", code: "GL" }, { name: "Città del Guatemala", code: "GT" },
+    { name: "Conakry", code: "GN" }, { name: "Port-au-Prince", code: "HT" },
+    { name: "Tegucigalpa", code: "HN" }, { name: "Nuova Delhi", code: "IN" },
+    { name: "Giacarta", code: "ID" }, { name: "Teheran", code: "IR" },
+    { name: "Baghdad", code: "IQ" }, { name: "Dublino", code: "IE" },
+    { name: "Reykjavik", code: "IS" }, { name: "Gerusalemme", code: "IL" },
+    { name: "Roma", code: "IT" }, { name: "Astana", code: "KZ" },
+    { name: "Nairobi", code: "KE" }, { name: "Bishkek", code: "KG" },
+    { name: "Pristina", code: "XK" }, { name: "Kuwait City", code: "KW" },
+    { name: "Vientiane", code: "LA" }, { name: "Riga", code: "LV" },
+    { name: "Beirut", code: "LB" }, { name: "Monrovia", code: "LR" },
+    { name: "Tripoli", code: "LY" }, { name: "Vaduz", code: "LI" },
+    { name: "Vilnius", code: "LT" }, { name: "Lussemburgo", code: "LU" },
+    { name: "Skopje", code: "MK" }, { name: "Antananarivo", code: "MG" },
+    { name: "Lilongwe", code: "MW" }, { name: "Kuala Lumpur", code: "MY" },
+    { name: "Malé", code: "MV" }, { name: "Bamako", code: "ML" },
+    { name: "La Valletta", code: "MT" }, { name: "Rabat", code: "MA" },
+    { name: "Nouakchott", code: "MR" }, { name: "Port Louis", code: "MU" },
+    { name: "Città del Messico", code: "MX" }, { name: "Chisinau", code: "MD" },
+    { name: "Monaco", code: "MC" }, { name: "Ulaanbaatar", code: "MN" },
+    { name: "Podgorica", code: "ME" }, { name: "Maputo", code: "MZ" },
+    { name: "Windhoek", code: "NA" }, { name: "Kathmandu", code: "NP" },
+    { name: "Managua", code: "NI" }, { name: "Niamey", code: "NE" },
+    { name: "Abuja", code: "NG" }, { name: "Oslo", code: "NO" },
+    { name: "Wellington", code: "NZ" }, { name: "Mascate", code: "OM" },
+    { name: "Amsterdam", code: "NL" }, { name: "Islamabad", code: "PK" },
+    { name: "Città di Panama", code: "PA" }, { name: "Port Moresby", code: "PG" },
+    { name: "Asuncion", code: "PY" }, { name: "Lima", code: "PE" },
+    { name: "Varsavia", code: "PL" }, { name: "Lisbona", code: "PT" },
+    { name: "Doha", code: "QA" }, { name: "Londra", code: "GB" },
+    { name: "Praga", code: "CZ" }, { name: "Santo Domingo", code: "DO" },
+    { name: "Bucarest", code: "RO" }, { name: "Kigali", code: "RW" },
+    { name: "Mosca", code: "RU" }, { name: "San Marino", code: "SM" },
+    { name: "Dakar", code: "SN" }, { name: "Belgrado", code: "RS" },
+    { name: "Singapore", code: "SG" }, { name: "Damasco", code: "SY" },
+    { name: "Bratislava", code: "SK" }, { name: "Lubiana", code: "SI" },
+    { name: "Mogadiscio", code: "SO" }, { name: "Madrid", code: "ES" },
+    { name: "Colombo", code: "LK" }, { name: "Washington", code: "US" },
+    { name: "Pretoria", code: "ZA" }, { name: "Khartoum", code: "SD" },
+    { name: "Stoccolma", code: "SE" }, { name: "Berna", code: "CH" },
+    { name: "Dushanbe", code: "TJ" }, { name: "Taipei", code: "TW" },
+    { name: "Dodoma", code: "TZ" }, { name: "Bangkok", code: "TH" },
+    { name: "Lomé", code: "TG" }, { name: "Tunisi", code: "TN" },
+    { name: "Ankara", code: "TR" }, { name: "Ashgabat", code: "TM" },
+    { name: "Kiev", code: "UA" }, { name: "Kampala", code: "UG" },
+    { name: "Budapest", code: "HU" }, { name: "Montevideo", code: "UY" },
+    { name: "Tashkent", code: "UZ" }, { name: "Caracas", code: "VE" },
+    { name: "Hanoi", code: "VN" }, { name: "Sana'a", code: "YE" },
+    { name: "Lusaka", code: "ZM" }, { name: "Harare", code: "ZW" }
+  ].sort(function (a, b) { return a.name.localeCompare(b.name, "it"); });
+
   var CATEGORIES = {
-    paesi: { options: PAESI_OPTIONS, allowFreeText: false },
-    citta: { options: CITTA_OPTIONS, allowFreeText: true }
+    paesi: { options: PAESI_OPTIONS, allowFreeText: false, idByCode: true, placeholder: "Cerca un paese…" },
+    citta: { options: CITTA_OPTIONS, allowFreeText: true, idByCode: false, placeholder: "Cerca una città…" },
+    capitali: { options: CAPITALI_OPTIONS, allowFreeText: false, idByCode: true, placeholder: "Cerca una capitale…" },
+    cacca: { options: [], allowFreeText: true, idByCode: false, placeholder: "Aggiungi un posto…", fallbackFlag: "💩" }
   };
 
   var PEOPLE = ["gamba", "beppe", "rutix"];
@@ -370,7 +509,11 @@
     return { gamba: [], beppe: [], rutix: [] };
   }
 
-  function defaultTopTens() { return { paesi: emptyPersonLists(), citta: emptyPersonLists() }; }
+  function defaultTopTens() {
+    var out = {};
+    Object.keys(CATEGORIES).forEach(function (cat) { out[cat] = emptyPersonLists(); });
+    return out;
+  }
 
   function normalizeTopTens(raw) {
     var out = defaultTopTens();
@@ -409,7 +552,7 @@
     var searchInput = document.querySelector('.search[data-cat="' + cat + '"][data-person="' + person + '"] input');
     var full = items.length >= MAX_ITEMS;
     searchInput.disabled = full;
-    searchInput.placeholder = full ? "Lista piena (10/10)" : (cat === "paesi" ? "Cerca un paese…" : "Cerca una città…");
+    searchInput.placeholder = full ? "Lista piena (10/10)" : CATEGORIES[cat].placeholder;
   }
 
   function renderAll() {
@@ -472,13 +615,14 @@
         return o.name.toLowerCase().indexOf(qLower) !== -1;
       }).slice(0, 8);
       var html = matches.map(function (o) {
-        var id = cat === "paesi" ? o.code.toLowerCase() : slugify(o.name) + "-" + o.code.toLowerCase();
+        var id = config.idByCode ? o.code.toLowerCase() : slugify(o.name) + "-" + o.code.toLowerCase();
         var already = TOPTENS[cat][person].some(function (c) { return c.id === id; });
         return '<button type="button" class="suggestion"' + (already ? ' disabled style="opacity:.4;cursor:default"' : "") + ' data-id="' + id + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + flagForCode(o.code) + '">' +
           '<span aria-hidden="true">' + flagForCode(o.code) + '</span><span>' + escapeHtml(o.name) + (already ? " (già in lista)" : "") + '</span></button>';
       }).join("");
       if (matches.length === 0 && config.allowFreeText) {
-        html += '<button type="button" class="suggestion suggestion--fallback" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="🏳️">➕ Aggiungi «' + escapeHtml(q) + '» comunque</button>';
+        var fallbackFlag = config.fallbackFlag || "🏳️";
+        html += '<button type="button" class="suggestion suggestion--fallback" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="' + fallbackFlag + '">➕ Aggiungi «' + escapeHtml(q) + '» comunque</button>';
       } else if (matches.length === 0) {
         html = '<div class="suggestion suggestion--fallback">Nessun risultato</div>';
       }
