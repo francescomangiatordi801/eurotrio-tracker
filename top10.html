@@ -320,7 +320,11 @@
     { name: "Papua Nuova Guinea", code: "PG" }, { name: "Paraguay", code: "PY" },
     { name: "Perù", code: "PE" }, { name: "Polonia", code: "PL" },
     { name: "Portogallo", code: "PT" }, { name: "Qatar", code: "QA" },
-    { name: "Regno Unito", code: "GB" }, { name: "Repubblica Ceca", code: "CZ" },
+    { name: "Galles", code: "galles", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}" },
+    { name: "Inghilterra", code: "inghilterra", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { name: "Irlanda del Nord", code: "irlanda-nord", flag: "\u{1F1EC}\u{1F1E7}" },
+    { name: "Scozia", code: "scozia", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}" },
+    { name: "Repubblica Ceca", code: "CZ" },
     { name: "Repubblica Dominicana", code: "DO" }, { name: "Romania", code: "RO" },
     { name: "Ruanda", code: "RW" }, { name: "Russia", code: "RU" },
     { name: "San Marino", code: "SM" }, { name: "Senegal", code: "SN" },
@@ -460,7 +464,11 @@
     { name: "Città di Panama", code: "PA" }, { name: "Port Moresby", code: "PG" },
     { name: "Asuncion", code: "PY" }, { name: "Lima", code: "PE" },
     { name: "Varsavia", code: "PL" }, { name: "Lisbona", code: "PT" },
-    { name: "Doha", code: "QA" }, { name: "Londra", code: "GB" },
+    { name: "Doha", code: "QA" },
+    { name: "Londra", code: "inghilterra", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { name: "Cardiff", code: "galles", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}" },
+    { name: "Belfast", code: "irlanda-nord", flag: "\u{1F1EC}\u{1F1E7}" },
+    { name: "Edimburgo", code: "scozia", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}" },
     { name: "Praga", code: "CZ" }, { name: "Santo Domingo", code: "DO" },
     { name: "Bucarest", code: "RO" }, { name: "Kigali", code: "RW" },
     { name: "Mosca", code: "RU" }, { name: "San Marino", code: "SM" },
@@ -624,8 +632,9 @@
         return o.name.toLowerCase().indexOf(qLower) !== -1;
       }).slice(0, 8);
       var html = matches.map(function (o) {
-        return '<button type="button" class="suggestion" data-id="' + o.code.toLowerCase() + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + flagForCode(o.code) + '">' +
-          '<span aria-hidden="true">' + flagForCode(o.code) + '</span><span>' + escapeHtml(o.name) + '</span></button>';
+        var oFlag = o.flag || flagForCode(o.code);
+        return '<button type="button" class="suggestion" data-id="' + o.code.toLowerCase() + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + oFlag + '">' +
+          '<span aria-hidden="true">' + oFlag + '</span><span>' + escapeHtml(o.name) + '</span></button>';
       }).join("");
       box.innerHTML = html || '<div class="suggestion suggestion--fallback">Nessun risultato</div>';
       box.hidden = false;
@@ -643,8 +652,9 @@
       var html = matches.map(function (o) {
         var id = config.idByCode ? o.code.toLowerCase() : slugify(o.name) + "-" + o.code.toLowerCase();
         var already = TOPTENS[cat][person].some(function (c) { return c.id === id; });
-        return '<button type="button" class="suggestion"' + (already ? ' disabled style="opacity:.4;cursor:default"' : "") + ' data-id="' + id + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + flagForCode(o.code) + '">' +
-          '<span aria-hidden="true">' + flagForCode(o.code) + '</span><span>' + escapeHtml(o.name) + (already ? " (già in lista)" : "") + '</span></button>';
+        var oFlag = o.flag || flagForCode(o.code);
+        return '<button type="button" class="suggestion"' + (already ? ' disabled style="opacity:.4;cursor:default"' : "") + ' data-id="' + id + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + oFlag + '">' +
+          '<span aria-hidden="true">' + oFlag + '</span><span>' + escapeHtml(o.name) + (already ? " (già in lista)" : "") + '</span></button>';
       }).join("");
       if (matches.length === 0 && config.allowFreeText) {
         html += '<button type="button" class="suggestion suggestion--fallback" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="🏳️">➕ Aggiungi «' + escapeHtml(q) + '» comunque</button>';
