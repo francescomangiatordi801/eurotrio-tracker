@@ -385,7 +385,8 @@
       container.innerHTML = '<p class="extra-empty">Ancora nessun paese — aggiungine uno qui sotto.</p>';
       return;
     }
-    var body = EXTRA_LIST.map(function (c) {
+    var sorted = EXTRA_LIST.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "it"); });
+    var body = sorted.map(function (c) {
       var st = STATE[c.id] || { gamba: "none", beppe: "none", rutix: "none" };
       var dots = PEOPLE.map(function (p) {
         var status = st[p];
