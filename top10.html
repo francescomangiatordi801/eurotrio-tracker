@@ -63,8 +63,10 @@
   .eyebrow::before { content: ""; width: 20px; height: 1px; background: var(--accent); display: inline-block; }
   .hero { display: flex; flex-direction: column; gap: 12px; }
   .pitch { color: var(--muted); max-width: 52ch; margin: 0; }
-  .category { display: flex; flex-direction: column; gap: 12px; }
+  .category { display: flex; flex-direction: column; gap: 20px; }
   .category-heading { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.2rem; }
+  .person-group { display: flex; flex-direction: column; gap: 10px; }
+  .person-heading { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
   .tt-list { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   .tt-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
   .tt-row:last-child { border-bottom: none; }
@@ -120,24 +122,62 @@
   <header class="hero">
     <div class="eyebrow">Classifiche</div>
     <h1>Top Ten</h1>
-    <p class="pitch">Le classifiche del trio — aggiungi, riordina con le frecce, togli con la ×.</p>
+    <p class="pitch">Una classifica per ciascuno — aggiungi, riordina con le frecce, togli con la ×.</p>
   </header>
 
   <section class="category" data-category="paesi">
     <div class="category-heading">🌍 Top 10 Paesi</div>
-    <div class="tt-list" id="list-paesi"></div>
-    <div class="search" data-search="paesi">
-      <input type="text" placeholder="Cerca un paese…" autocomplete="off" aria-label="Cerca un paese da aggiungere">
-      <div class="suggestions" hidden></div>
+    <div class="person-group" data-cat="paesi" data-person="gamba">
+      <div class="person-heading">Gamba</div>
+      <div class="tt-list" id="list-paesi-gamba"></div>
+      <div class="search" data-cat="paesi" data-person="gamba">
+        <input type="text" placeholder="Cerca un paese…" autocomplete="off" aria-label="Cerca un paese da aggiungere per Gamba">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="paesi" data-person="beppe">
+      <div class="person-heading">Beppe</div>
+      <div class="tt-list" id="list-paesi-beppe"></div>
+      <div class="search" data-cat="paesi" data-person="beppe">
+        <input type="text" placeholder="Cerca un paese…" autocomplete="off" aria-label="Cerca un paese da aggiungere per Beppe">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="paesi" data-person="rutix">
+      <div class="person-heading">Rutix</div>
+      <div class="tt-list" id="list-paesi-rutix"></div>
+      <div class="search" data-cat="paesi" data-person="rutix">
+        <input type="text" placeholder="Cerca un paese…" autocomplete="off" aria-label="Cerca un paese da aggiungere per Rutix">
+        <div class="suggestions" hidden></div>
+      </div>
     </div>
   </section>
 
   <section class="category" data-category="citta">
     <div class="category-heading">🏙️ Top 10 Città</div>
-    <div class="tt-list" id="list-citta"></div>
-    <div class="search" data-search="citta">
-      <input type="text" placeholder="Cerca una città…" autocomplete="off" aria-label="Cerca una città da aggiungere">
-      <div class="suggestions" hidden></div>
+    <div class="person-group" data-cat="citta" data-person="gamba">
+      <div class="person-heading">Gamba</div>
+      <div class="tt-list" id="list-citta-gamba"></div>
+      <div class="search" data-cat="citta" data-person="gamba">
+        <input type="text" placeholder="Cerca una città…" autocomplete="off" aria-label="Cerca una città da aggiungere per Gamba">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="citta" data-person="beppe">
+      <div class="person-heading">Beppe</div>
+      <div class="tt-list" id="list-citta-beppe"></div>
+      <div class="search" data-cat="citta" data-person="beppe">
+        <input type="text" placeholder="Cerca una città…" autocomplete="off" aria-label="Cerca una città da aggiungere per Beppe">
+        <div class="suggestions" hidden></div>
+      </div>
+    </div>
+    <div class="person-group" data-cat="citta" data-person="rutix">
+      <div class="person-heading">Rutix</div>
+      <div class="tt-list" id="list-citta-rutix"></div>
+      <div class="search" data-cat="citta" data-person="rutix">
+        <input type="text" placeholder="Cerca una città…" autocomplete="off" aria-label="Cerca una città da aggiungere per Rutix">
+        <div class="suggestions" hidden></div>
+      </div>
     </div>
   </section>
 
@@ -308,6 +348,8 @@
     citta: { options: CITTA_OPTIONS, allowFreeText: true }
   };
 
+  var PEOPLE = ["gamba", "beppe", "rutix"];
+
   function slugify(str) {
     return str.toLowerCase()
       .normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -321,14 +363,34 @@
   }
 
   var RAW = {};
-  var TOPTENS = { paesi: [], citta: [] };
+  var TOPTENS = defaultTopTens();
   var currentSha = null;
 
-  function defaultTopTens() { return { paesi: [], citta: [] }; }
+  function emptyPersonLists() {
+    return { gamba: [], beppe: [], rutix: [] };
+  }
 
-  function renderList(cat) {
-    var container = document.getElementById("list-" + cat);
-    var items = TOPTENS[cat] || [];
+  function defaultTopTens() { return { paesi: emptyPersonLists(), citta: emptyPersonLists() }; }
+
+  function normalizeTopTens(raw) {
+    var out = defaultTopTens();
+    Object.keys(out).forEach(function (cat) {
+      var val = raw && raw[cat];
+      if (Array.isArray(val)) {
+        // Legacy format: a single flat list, which was Rutix's.
+        out[cat].rutix = val;
+      } else if (val && typeof val === "object") {
+        PEOPLE.forEach(function (person) {
+          if (Array.isArray(val[person])) out[cat][person] = val[person];
+        });
+      }
+    });
+    return out;
+  }
+
+  function renderList(cat, person) {
+    var container = document.getElementById("list-" + cat + "-" + person);
+    var items = (TOPTENS[cat] && TOPTENS[cat][person]) || [];
     if (items.length === 0) {
       container.innerHTML = '<p class="tt-empty">Ancora nessuna voce — cercala qui sotto.</p>';
     } else {
@@ -338,31 +400,35 @@
           '<span class="tt-flag" aria-hidden="true">' + item.flag + '</span>' +
           '<span class="tt-name">' + escapeHtml(item.name) + '</span>' +
           '<span class="tt-actions">' +
-          '<button type="button" class="tt-btn" data-move="up" data-cat="' + cat + '" data-id="' + item.id + '"' + (i === 0 ? " disabled" : "") + ' aria-label="Sposta su">▲</button>' +
-          '<button type="button" class="tt-btn" data-move="down" data-cat="' + cat + '" data-id="' + item.id + '"' + (i === items.length - 1 ? " disabled" : "") + ' aria-label="Sposta giù">▼</button>' +
-          '<button type="button" class="tt-btn tt-btn--remove" data-remove data-cat="' + cat + '" data-id="' + item.id + '" aria-label="Rimuovi">×</button>' +
+          '<button type="button" class="tt-btn" data-move="up" data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '"' + (i === 0 ? " disabled" : "") + ' aria-label="Sposta su">▲</button>' +
+          '<button type="button" class="tt-btn" data-move="down" data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '"' + (i === items.length - 1 ? " disabled" : "") + ' aria-label="Sposta giù">▼</button>' +
+          '<button type="button" class="tt-btn tt-btn--remove" data-remove data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '" aria-label="Rimuovi">×</button>' +
           "</span></div>";
       }).join("");
     }
-    var searchInput = document.querySelector('[data-search="' + cat + '"] input');
+    var searchInput = document.querySelector('.search[data-cat="' + cat + '"][data-person="' + person + '"] input');
     var full = items.length >= MAX_ITEMS;
     searchInput.disabled = full;
     searchInput.placeholder = full ? "Lista piena (10/10)" : (cat === "paesi" ? "Cerca un paese…" : "Cerca una città…");
   }
 
-  function renderAll() { Object.keys(CATEGORIES).forEach(renderList); }
+  function renderAll() {
+    Object.keys(CATEGORIES).forEach(function (cat) {
+      PEOPLE.forEach(function (person) { renderList(cat, person); });
+    });
+  }
 
-  function addItem(cat, id, name, flag) {
-    var items = TOPTENS[cat];
+  function addItem(cat, person, id, name, flag) {
+    var items = TOPTENS[cat][person];
     if (items.length >= MAX_ITEMS) return;
     if (items.some(function (c) { return c.id === id; })) return;
     items.push({ id: id, name: name, flag: flag });
-    renderList(cat);
+    renderList(cat, person);
     schedulePublish();
   }
 
-  function moveItem(cat, id, dir) {
-    var items = TOPTENS[cat];
+  function moveItem(cat, person, id, dir) {
+    var items = TOPTENS[cat][person];
     var idx = items.findIndex(function (c) { return c.id === id; });
     if (idx === -1) return;
     var swapWith = dir === "up" ? idx - 1 : idx + 1;
@@ -370,28 +436,28 @@
     var tmp = items[idx];
     items[idx] = items[swapWith];
     items[swapWith] = tmp;
-    renderList(cat);
+    renderList(cat, person);
     schedulePublish();
   }
 
-  function removeItem(cat, id) {
-    TOPTENS[cat] = TOPTENS[cat].filter(function (c) { return c.id !== id; });
-    renderList(cat);
+  function removeItem(cat, person, id) {
+    TOPTENS[cat][person] = TOPTENS[cat][person].filter(function (c) { return c.id !== id; });
+    renderList(cat, person);
     schedulePublish();
   }
 
   document.querySelectorAll(".tt-list").forEach(function (list) {
     list.addEventListener("click", function (e) {
-      var cat = list.id.replace("list-", "");
       var moveBtn = e.target.closest("[data-move]");
-      if (moveBtn) { moveItem(cat, moveBtn.dataset.id, moveBtn.dataset.move); return; }
+      if (moveBtn) { moveItem(moveBtn.dataset.cat, moveBtn.dataset.person, moveBtn.dataset.id, moveBtn.dataset.move); return; }
       var removeBtn = e.target.closest("[data-remove]");
-      if (removeBtn) { removeItem(cat, removeBtn.dataset.id); return; }
+      if (removeBtn) { removeItem(removeBtn.dataset.cat, removeBtn.dataset.person, removeBtn.dataset.id); return; }
     });
   });
 
   document.querySelectorAll(".search").forEach(function (searchEl) {
-    var cat = searchEl.dataset.search;
+    var cat = searchEl.dataset.cat;
+    var person = searchEl.dataset.person;
     var input = searchEl.querySelector("input");
     var box = searchEl.querySelector(".suggestions");
     var config = CATEGORIES[cat];
@@ -407,7 +473,7 @@
       }).slice(0, 8);
       var html = matches.map(function (o) {
         var id = cat === "paesi" ? o.code.toLowerCase() : slugify(o.name) + "-" + o.code.toLowerCase();
-        var already = TOPTENS[cat].some(function (c) { return c.id === id; });
+        var already = TOPTENS[cat][person].some(function (c) { return c.id === id; });
         return '<button type="button" class="suggestion"' + (already ? ' disabled style="opacity:.4;cursor:default"' : "") + ' data-id="' + id + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + flagForCode(o.code) + '">' +
           '<span aria-hidden="true">' + flagForCode(o.code) + '</span><span>' + escapeHtml(o.name) + (already ? " (già in lista)" : "") + '</span></button>';
       }).join("");
@@ -428,7 +494,7 @@
       var btn = e.target.closest(".suggestion");
       if (!btn || btn.disabled) return;
       e.preventDefault();
-      addItem(cat, btn.dataset.id, btn.dataset.name, btn.dataset.flag);
+      addItem(cat, person, btn.dataset.id, btn.dataset.name, btn.dataset.flag);
       input.value = "";
       closeBox();
     });
@@ -470,13 +536,11 @@
         currentSha = data.sha;
         try {
           RAW = JSON.parse(b64DecodeUnicode(data.content.replace(/\n/g, ""))) || {};
-          TOPTENS = RAW.topTens || defaultTopTens();
+          TOPTENS = normalizeTopTens(RAW.topTens);
         } catch (e) {
           RAW = {};
           TOPTENS = defaultTopTens();
         }
-        if (!TOPTENS.paesi) TOPTENS.paesi = [];
-        if (!TOPTENS.citta) TOPTENS.citta = [];
       });
   }
 
