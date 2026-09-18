@@ -81,7 +81,9 @@
   .tt-btn--remove:hover { color: var(--red); }
   .tt-empty { color: var(--faint); font-size: 0.9rem; padding: 14px 12px; }
   .tt-full-note { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.72rem; color: var(--faint); }
+  .tt-form { display: contents; }
   .search { position: relative; }
+  .search--picking input { border-color: var(--accent); }
   .search input {
     width: 100%;
     font: inherit;
@@ -215,7 +217,7 @@
       <div class="person-heading">Gamba</div>
       <div class="tt-list" id="list-cacca-gamba"></div>
       <div class="search" data-cat="cacca" data-person="gamba">
-        <input type="text" placeholder="Aggiungi un posto…" autocomplete="off" aria-label="Aggiungi un posto per Gamba">
+        <form class="tt-form"><input type="text" placeholder="Aggiungi un posto…" autocomplete="off" enterkeyhint="next" aria-label="Aggiungi un posto per Gamba"></form>
         <div class="suggestions" hidden></div>
       </div>
     </div>
@@ -223,7 +225,7 @@
       <div class="person-heading">Beppe</div>
       <div class="tt-list" id="list-cacca-beppe"></div>
       <div class="search" data-cat="cacca" data-person="beppe">
-        <input type="text" placeholder="Aggiungi un posto…" autocomplete="off" aria-label="Aggiungi un posto per Beppe">
+        <form class="tt-form"><input type="text" placeholder="Aggiungi un posto…" autocomplete="off" enterkeyhint="next" aria-label="Aggiungi un posto per Beppe"></form>
         <div class="suggestions" hidden></div>
       </div>
     </div>
@@ -231,7 +233,7 @@
       <div class="person-heading">Rutix</div>
       <div class="tt-list" id="list-cacca-rutix"></div>
       <div class="search" data-cat="cacca" data-person="rutix">
-        <input type="text" placeholder="Aggiungi un posto…" autocomplete="off" aria-label="Aggiungi un posto per Rutix">
+        <form class="tt-form"><input type="text" placeholder="Aggiungi un posto…" autocomplete="off" enterkeyhint="next" aria-label="Aggiungi un posto per Rutix"></form>
         <div class="suggestions" hidden></div>
       </div>
     </div>
@@ -484,7 +486,7 @@
     paesi: { options: PAESI_OPTIONS, allowFreeText: false, idByCode: true, placeholder: "Cerca un paese…" },
     citta: { options: CITTA_OPTIONS, allowFreeText: true, idByCode: false, placeholder: "Cerca una città…" },
     capitali: { options: CAPITALI_OPTIONS, allowFreeText: false, idByCode: true, placeholder: "Cerca una capitale…" },
-    cacca: { options: [], allowFreeText: true, idByCode: false, placeholder: "Aggiungi un posto…", fallbackFlag: "💩" }
+    cacca: { options: [], allowFreeText: false, idByCode: false, placeholder: "Aggiungi un posto…", pickCountryOnAdd: true, emptyText: "Ancora nessuna voce — scrivi cosa, premi invio, poi scegli il paese." }
   };
 
   var PEOPLE = ["gamba", "beppe", "rutix"];
@@ -535,7 +537,8 @@
     var container = document.getElementById("list-" + cat + "-" + person);
     var items = (TOPTENS[cat] && TOPTENS[cat][person]) || [];
     if (items.length === 0) {
-      container.innerHTML = '<p class="tt-empty">Ancora nessuna voce — cercala qui sotto.</p>';
+      var emptyText = CATEGORIES[cat].emptyText || "Ancora nessuna voce — cercala qui sotto.";
+      container.innerHTML = '<p class="tt-empty">' + emptyText + '</p>';
     } else {
       container.innerHTML = items.map(function (item, i) {
         return '<div class="tt-row">' +
@@ -604,11 +607,34 @@
     var input = searchEl.querySelector("input");
     var box = searchEl.querySelector(".suggestions");
     var config = CATEGORIES[cat];
+    var pendingText = null; // set once free text is confirmed, while the country is being picked
 
     function closeBox() { box.hidden = true; box.innerHTML = ""; }
 
+    function resetPending() {
+      pendingText = null;
+      searchEl.classList.remove("search--picking");
+      input.placeholder = config.placeholder;
+    }
+
+    function renderCountryMatches(q) {
+      if (q.length < 2) { closeBox(); return; }
+      var qLower = q.toLowerCase();
+      var matches = PAESI_OPTIONS.filter(function (o) {
+        return o.name.toLowerCase().indexOf(qLower) !== -1;
+      }).slice(0, 8);
+      var html = matches.map(function (o) {
+        return '<button type="button" class="suggestion" data-id="' + o.code.toLowerCase() + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + flagForCode(o.code) + '">' +
+          '<span aria-hidden="true">' + flagForCode(o.code) + '</span><span>' + escapeHtml(o.name) + '</span></button>';
+      }).join("");
+      box.innerHTML = html || '<div class="suggestion suggestion--fallback">Nessun risultato</div>';
+      box.hidden = false;
+    }
+
     function showMatches() {
       var q = input.value.trim();
+      if (pendingText !== null) { renderCountryMatches(q); return; }
+      if (config.options.length === 0) { closeBox(); return; }
       if (q.length < 3) { closeBox(); return; }
       var qLower = q.toLowerCase();
       var matches = config.options.filter(function (o) {
@@ -621,8 +647,7 @@
           '<span aria-hidden="true">' + flagForCode(o.code) + '</span><span>' + escapeHtml(o.name) + (already ? " (già in lista)" : "") + '</span></button>';
       }).join("");
       if (matches.length === 0 && config.allowFreeText) {
-        var fallbackFlag = config.fallbackFlag || "🏳️";
-        html += '<button type="button" class="suggestion suggestion--fallback" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="' + fallbackFlag + '">➕ Aggiungi «' + escapeHtml(q) + '» comunque</button>';
+        html += '<button type="button" class="suggestion suggestion--fallback" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="🏳️">➕ Aggiungi «' + escapeHtml(q) + '» comunque</button>';
       } else if (matches.length === 0) {
         html = '<div class="suggestion suggestion--fallback">Nessun risultato</div>';
       }
@@ -634,10 +659,41 @@
     input.addEventListener("focus", showMatches);
     input.addEventListener("blur", function () { setTimeout(closeBox, 150); });
 
+    if (config.pickCountryOnAdd) {
+      searchEl.querySelector("form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (pendingText !== null) return;
+        var text = input.value.trim();
+        if (!text) return;
+        if (TOPTENS[cat][person].length >= MAX_ITEMS) return;
+        pendingText = text;
+        searchEl.classList.add("search--picking");
+        input.value = "";
+        input.placeholder = "Dove? Cerca il paese…";
+        input.focus();
+        closeBox();
+      });
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && pendingText !== null) {
+          e.preventDefault();
+          resetPending();
+          input.value = "";
+          closeBox();
+        }
+      });
+    }
+
     box.addEventListener("mousedown", function (e) {
       var btn = e.target.closest(".suggestion");
       if (!btn || btn.disabled) return;
       e.preventDefault();
+      if (pendingText !== null) {
+        addItem(cat, person, slugify(pendingText) + "-" + btn.dataset.id, pendingText, btn.dataset.flag);
+        resetPending();
+        input.value = "";
+        closeBox();
+        return;
+      }
       addItem(cat, person, btn.dataset.id, btn.dataset.name, btn.dataset.flag);
       input.value = "";
       closeBox();
