@@ -358,9 +358,14 @@
     { name: "Bilbao", code: "ES" }, { name: "Malaga", code: "ES" }, { name: "Granada", code: "ES" },
     { name: "Ibiza", code: "ES" }, { name: "Berlino", code: "DE" }, { name: "Monaco di Baviera", code: "DE" },
     { name: "Amburgo", code: "DE" }, { name: "Colonia", code: "DE" }, { name: "Francoforte", code: "DE" },
-    { name: "Dresda", code: "DE" }, { name: "Londra", code: "GB" }, { name: "Manchester", code: "GB" },
-    { name: "Edimburgo", code: "GB" }, { name: "Glasgow", code: "GB" }, { name: "Liverpool", code: "GB" },
-    { name: "Birmingham", code: "GB" }, { name: "Lisbona", code: "PT" }, { name: "Porto", code: "PT" },
+    { name: "Dresda", code: "DE" },
+    { name: "Londra", code: "inghilterra", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { name: "Manchester", code: "inghilterra", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { name: "Edimburgo", code: "scozia", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}" },
+    { name: "Glasgow", code: "scozia", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}" },
+    { name: "Liverpool", code: "inghilterra", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { name: "Birmingham", code: "inghilterra", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { name: "Lisbona", code: "PT" }, { name: "Porto", code: "PT" },
     { name: "Amsterdam", code: "NL" }, { name: "Rotterdam", code: "NL" }, { name: "L'Aia", code: "NL" },
     { name: "Utrecht", code: "NL" }, { name: "Bruxelles", code: "BE" }, { name: "Anversa", code: "BE" },
     { name: "Bruges", code: "BE" }, { name: "Gand", code: "BE" }, { name: "Zurigo", code: "CH" },
@@ -493,7 +498,7 @@
 
   var CATEGORIES = {
     paesi: { options: PAESI_OPTIONS, allowFreeText: false, idByCode: true, placeholder: "Cerca un paese…" },
-    citta: { options: CITTA_OPTIONS, allowFreeText: true, idByCode: false, placeholder: "Cerca una città…" },
+    citta: { options: CITTA_OPTIONS, allowFreeText: true, idByCode: false, placeholder: "Cerca una città…", pickCountryOnAdd: true },
     capitali: { options: CAPITALI_OPTIONS, allowFreeText: false, idByCode: true, placeholder: "Cerca una capitale…" },
     cacca: { options: [], allowFreeText: false, idByCode: false, placeholder: "Aggiungi un posto…", pickCountryOnAdd: true, emptyText: "Ancora nessuna voce — scrivi cosa, premi invio, poi scegli il paese." }
   };
@@ -626,6 +631,16 @@
       input.placeholder = config.placeholder;
     }
 
+    function beginPick(text) {
+      if (!text || TOPTENS[cat][person].length >= MAX_ITEMS) return;
+      pendingText = text;
+      searchEl.classList.add("search--picking");
+      input.value = "";
+      input.placeholder = "Dove? Cerca il paese…";
+      input.focus();
+      closeBox();
+    }
+
     function renderCountryMatches(q) {
       if (q.length < 2) { closeBox(); return; }
       var qLower = q.toLowerCase();
@@ -671,19 +686,14 @@
     input.addEventListener("blur", function () { setTimeout(closeBox, 150); });
 
     if (config.pickCountryOnAdd) {
-      searchEl.querySelector("form").addEventListener("submit", function (e) {
-        e.preventDefault();
-        if (pendingText !== null) return;
-        var text = input.value.trim();
-        if (!text) return;
-        if (TOPTENS[cat][person].length >= MAX_ITEMS) return;
-        pendingText = text;
-        searchEl.classList.add("search--picking");
-        input.value = "";
-        input.placeholder = "Dove? Cerca il paese…";
-        input.focus();
-        closeBox();
-      });
+      var form = searchEl.querySelector("form");
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (pendingText !== null) return;
+          beginPick(input.value.trim());
+        });
+      }
       input.addEventListener("keydown", function (e) {
         if (e.key === "Escape" && pendingText !== null) {
           e.preventDefault();
@@ -703,6 +713,10 @@
         resetPending();
         input.value = "";
         closeBox();
+        return;
+      }
+      if (config.pickCountryOnAdd && btn.classList.contains("suggestion--add")) {
+        beginPick(btn.dataset.name);
         return;
       }
       addItem(cat, person, btn.dataset.id, btn.dataset.name, btn.dataset.flag);
