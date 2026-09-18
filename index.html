@@ -256,6 +256,60 @@
     return s;
   }
 
+  var ISO_BY_NAME = {
+    "afghanistan": "AF", "albania": "AL", "algeria": "DZ", "arabia saudita": "SA",
+    "argentina": "AR", "armenia": "AM", "australia": "AU", "austria": "AT",
+    "azerbaigian": "AZ", "bahamas": "BS", "bahrein": "BH", "bangladesh": "BD",
+    "belgio": "BE", "bielorussia": "BY", "birmania": "MM", "myanmar": "MM",
+    "bolivia": "BO", "bosnia": "BA", "botswana": "BW", "brasile": "BR",
+    "bulgaria": "BG", "burkina faso": "BF", "cambogia": "KH", "camerun": "CM",
+    "canada": "CA", "capo verde": "CV", "ciad": "TD", "cile": "CL", "cina": "CN",
+    "cipro": "CY", "colombia": "CO", "corea del nord": "KP", "corea del sud": "KR",
+    "corea": "KR", "costa davorio": "CI", "costa d'avorio": "CI", "costa rica": "CR",
+    "croazia": "HR", "cuba": "CU", "danimarca": "DK", "ecuador": "EC", "egitto": "EG",
+    "el salvador": "SV", "emirati arabi uniti": "AE", "dubai": "AE", "eritrea": "ER",
+    "estonia": "EE", "etiopia": "ET", "figi": "FJ", "fiji": "FJ", "filippine": "PH",
+    "finlandia": "FI", "francia": "FR", "gabon": "GA", "galles": "GB-WLS",
+    "gambia": "GM", "georgia": "GE", "germania": "DE", "ghana": "GH",
+    "giamaica": "JM", "giappone": "JP", "giordania": "JO", "grecia": "GR",
+    "groenlandia": "GL", "guatemala": "GT", "guinea": "GN", "haiti": "HT",
+    "honduras": "HN", "hong kong": "HK", "india": "IN", "indonesia": "ID",
+    "inghilterra": "GB-ENG", "iran": "IR", "iraq": "IQ", "irlanda": "IE",
+    "irlanda del nord": "GB-NIR", "islanda": "IS", "islanda": "IS",
+    "israele": "IL", "italia": "IT", "kazakistan": "KZ", "kenya": "KE",
+    "kirghizistan": "KG", "kosovo": "XK", "kuwait": "KW", "laos": "LA",
+    "lettonia": "LV", "libano": "LB", "liberia": "LR", "libia": "LY",
+    "liechtenstein": "LI", "lituania": "LT", "lussemburgo": "LU",
+    "macedonia del nord": "MK", "madagascar": "MG", "malawi": "MW",
+    "malesia": "MY", "maldive": "MV", "mali": "ML", "malta": "MT",
+    "marocco": "MA", "mauritania": "MR", "mauritius": "MU", "messico": "MX",
+    "moldavia": "MD", "monaco": "MC", "mongolia": "MN", "montenegro": "ME",
+    "mozambico": "MZ", "namibia": "NA", "nepal": "NP", "nicaragua": "NI",
+    "niger": "NE", "nigeria": "NG", "norvegia": "NO", "nuova zelanda": "NZ",
+    "oman": "OM", "paesi bassi": "NL", "olanda": "NL", "pakistan": "PK",
+    "panama": "PA", "papua nuova guinea": "PG", "paraguay": "PY", "peru": "PE",
+    "perù": "PE", "polonia": "PL", "portogallo": "PT", "qatar": "QA",
+    "regno unito": "GB", "repubblica ceca": "CZ", "repubblica dominicana": "DO",
+    "romania": "RO", "ruanda": "RW", "russia": "RU", "san marino": "SM",
+    "scozia": "GB-SCT", "senegal": "SN", "serbia": "RS", "singapore": "SG",
+    "siria": "SY", "slovacchia": "SK", "slovenia": "SI", "somalia": "SO",
+    "spagna": "ES", "sri lanka": "LK", "stati uniti": "US", "usa": "US",
+    "sudafrica": "ZA", "sudan": "SD", "svezia": "SE", "svizzera": "CH",
+    "tagikistan": "TJ", "taiwan": "TW", "tanzania": "TZ", "thailandia": "TH",
+    "togo": "TG", "tunisia": "TN", "turchia": "TR", "turkmenistan": "TM",
+    "ucraina": "UA", "uganda": "UG", "ungheria": "HU", "uruguay": "UY",
+    "uzbekistan": "UZ", "vaticano": "VA", "venezuela": "VE", "vietnam": "VN",
+    "yemen": "YE", "zambia": "ZM", "zimbabwe": "ZW", "andorra": "AD"
+  };
+
+  function flagForName(name) {
+    var key = name.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    var code = ISO_BY_NAME[key];
+    if (!code || code.length !== 2) return "🏳️";
+    var A = 0x1F1E6;
+    return String.fromCodePoint(A + (code.charCodeAt(0) - 65), A + (code.charCodeAt(1) - 65));
+  }
+
   function slugify(str) {
     var slug = str.trim().toLowerCase()
       .normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -355,7 +409,7 @@
         var label = PEOPLE_LABEL[p] + ", " + c.name + ": " + LABEL[status];
         return '<button type="button" class="dot dot--' + status + '" data-country="' + c.id + '" data-person="' + p + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></button>';
       }).join("");
-      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">🌐</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
+      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + flagForName(c.name) + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
     }).join("");
     container.innerHTML = extraHeadRowHTML() + body;
   }
