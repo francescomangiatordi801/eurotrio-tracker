@@ -111,7 +111,8 @@
   }
   .suggestion { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; cursor: pointer; font-size: 0.95rem; }
   .suggestion:hover, .suggestion--active { background: var(--bg); }
-  .suggestion--fallback { color: var(--muted); font-style: italic; }
+  .suggestion--fallback { color: var(--muted); font-style: italic; cursor: default; }
+  .suggestion--add { color: var(--accent-ink); font-weight: 500; }
   .footer { padding-top: 20px; border-top: 1px solid var(--line); color: var(--faint); font-size: 0.82rem; }
   #sync-status { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.02em; }
   #sync-status.sync-status--error { color: var(--red); }
@@ -657,7 +658,7 @@
           '<span aria-hidden="true">' + oFlag + '</span><span>' + escapeHtml(o.name) + (already ? " (già in lista)" : "") + '</span></button>';
       }).join("");
       if (matches.length === 0 && config.allowFreeText) {
-        html += '<button type="button" class="suggestion suggestion--fallback" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="🏳️">➕ Aggiungi «' + escapeHtml(q) + '» comunque</button>';
+        html += '<button type="button" class="suggestion suggestion--add" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="🏳️">➕ Aggiungi «' + escapeHtml(q) + '»</button>';
       } else if (matches.length === 0) {
         html = '<div class="suggestion suggestion--fallback">Nessun risultato</div>';
       }
