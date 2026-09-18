@@ -29,6 +29,7 @@ jobs:
         run: |
           mkdir -p dist
           sed "s|__GH_TOKEN__|$GH_WRITE_TOKEN|" index.html > dist/index.html
+          sed "s|__GH_TOKEN__|$GH_WRITE_TOKEN|" top10.html > dist/top10.html
           cp data.json dist/data.json
 
       - uses: actions/upload-pages-artifact@v3

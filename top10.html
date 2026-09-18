@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EuroTrio · Top Ten</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --ink: #20242a;
+    --muted: #65707a;
+    --faint: #9aa2a8;
+    --accent: #2f6a63;
+    --accent-ink: #1d4640;
+    --line: #e3ddd0;
+    --red: #c1462f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12171a;
+      --surface: #1a2024;
+      --ink: #eef1ef;
+      --muted: #9aa7ae;
+      --faint: #5c666c;
+      --accent: #6fb3a8;
+      --accent-ink: #9ed4c9;
+      --line: #293034;
+      --red: #e2735a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Work Sans", system-ui, -apple-system, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.55;
+    margin: 0;
+    padding-inline: 20px;
+    padding-block: 44px 64px;
+  }
+  .page { max-width: 660px; margin-inline: auto; display: flex; flex-direction: column; gap: 32px; }
+  .back-link { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.75rem; letter-spacing: 0.04em; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--ink); }
+  h1 {
+    font-family: "Spectral", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 6vw, 2.6rem);
+    margin: 0;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .eyebrow::before { content: ""; width: 20px; height: 1px; background: var(--accent); display: inline-block; }
+  .hero { display: flex; flex-direction: column; gap: 12px; }
+  .pitch { color: var(--muted); max-width: 52ch; margin: 0; }
+  .category { display: flex; flex-direction: column; gap: 12px; }
+  .category-heading { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.2rem; }
+  .tt-list { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .tt-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .tt-row:last-child { border-bottom: none; }
+  .tt-rank { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; color: var(--faint); width: 1.4em; flex-shrink: 0; }
+  .tt-flag { font-size: 1.2em; flex-shrink: 0; }
+  .tt-name { flex: 1; font-size: 1rem; }
+  .tt-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+  .tt-btn { all: unset; cursor: pointer; color: var(--faint); font-size: 0.95rem; line-height: 1; padding: 5px; border-radius: 4px; }
+  .tt-btn:hover { color: var(--ink); }
+  .tt-btn:disabled { opacity: 0.25; cursor: default; }
+  .tt-btn:disabled:hover { color: var(--faint); }
+  .tt-btn--remove:hover { color: var(--red); }
+  .tt-empty { color: var(--faint); font-size: 0.9rem; padding: 14px 12px; }
+  .tt-full-note { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.72rem; color: var(--faint); }
+  .search { position: relative; }
+  .search input {
+    width: 100%;
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .search input:disabled { opacity: 0.5; }
+  .suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .suggestion { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; cursor: pointer; font-size: 0.95rem; }
+  .suggestion:hover, .suggestion--active { background: var(--bg); }
+  .suggestion--fallback { color: var(--muted); font-style: italic; }
+  .footer { padding-top: 20px; border-top: 1px solid var(--line); color: var(--faint); font-size: 0.82rem; }
+  #sync-status { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.02em; }
+  #sync-status.sync-status--error { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="back-link" href="index.html">← EuroTrio</a>
+
+  <header class="hero">
+    <div class="eyebrow">Classifiche</div>
+    <h1>Top Ten</h1>
+    <p class="pitch">Le classifiche del trio — aggiungi, riordina con le frecce, togli con la ×.</p>
+  </header>
+
+  <section class="category" data-category="paesi">
+    <div class="category-heading">🌍 Top 10 Paesi</div>
+    <div class="tt-list" id="list-paesi"></div>
+    <div class="search" data-search="paesi">
+      <input type="text" placeholder="Cerca un paese…" autocomplete="off" aria-label="Cerca un paese da aggiungere">
+      <div class="suggestions" hidden></div>
+    </div>
+  </section>
+
+  <section class="category" data-category="citta">
+    <div class="category-heading">🏙️ Top 10 Città</div>
+    <div class="tt-list" id="list-citta"></div>
+    <div class="search" data-search="citta">
+      <input type="text" placeholder="Cerca una città…" autocomplete="off" aria-label="Cerca una città da aggiungere">
+      <div class="suggestions" hidden></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Salvato per tutti, in tempo reale</span>
+    <span id="sync-status" hidden></span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var GH_OWNER = "francescomangiatordi801";
+  var GH_REPO = "eurotrio-tracker";
+  var GH_PATH = "data.json";
+  var GH_TOKEN = "__GH_TOKEN__";
+  var API_BASE = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_PATH;
+  var MAX_ITEMS = 10;
+
+  function flagForCode(code) {
+    if (!code || code.length !== 2) return "🏳️";
+    var A = 0x1F1E6;
+    return String.fromCodePoint(A + (code.charCodeAt(0) - 65), A + (code.charCodeAt(1) - 65));
+  }
+
+  var PAESI_OPTIONS = [
+    { name: "Afghanistan", code: "AF" }, { name: "Albania", code: "AL" },
+    { name: "Andorra", code: "AD" }, { name: "Arabia Saudita", code: "SA" },
+    { name: "Argentina", code: "AR" }, { name: "Armenia", code: "AM" },
+    { name: "Australia", code: "AU" }, { name: "Austria", code: "AT" },
+    { name: "Azerbaigian", code: "AZ" }, { name: "Bahamas", code: "BS" },
+    { name: "Bahrein", code: "BH" }, { name: "Bangladesh", code: "BD" },
+    { name: "Belgio", code: "BE" }, { name: "Bielorussia", code: "BY" },
+    { name: "Birmania", code: "MM" }, { name: "Bolivia", code: "BO" },
+    { name: "Bosnia ed Erzegovina", code: "BA" }, { name: "Botswana", code: "BW" },
+    { name: "Brasile", code: "BR" }, { name: "Bulgaria", code: "BG" },
+    { name: "Burkina Faso", code: "BF" }, { name: "Cambogia", code: "KH" },
+    { name: "Camerun", code: "CM" }, { name: "Canada", code: "CA" },
+    { name: "Capo Verde", code: "CV" }, { name: "Ciad", code: "TD" },
+    { name: "Cile", code: "CL" }, { name: "Cina", code: "CN" },
+    { name: "Cipro", code: "CY" }, { name: "Città del Vaticano", code: "VA" },
+    { name: "Colombia", code: "CO" }, { name: "Corea del Nord", code: "KP" },
+    { name: "Corea del Sud", code: "KR" }, { name: "Costa d'Avorio", code: "CI" },
+    { name: "Costa Rica", code: "CR" }, { name: "Croazia", code: "HR" },
+    { name: "Cuba", code: "CU" }, { name: "Danimarca", code: "DK" },
+    { name: "Ecuador", code: "EC" }, { name: "Egitto", code: "EG" },
+    { name: "El Salvador", code: "SV" }, { name: "Emirati Arabi Uniti", code: "AE" },
+    { name: "Eritrea", code: "ER" }, { name: "Estonia", code: "EE" },
+    { name: "Etiopia", code: "ET" }, { name: "Figi", code: "FJ" },
+    { name: "Filippine", code: "PH" }, { name: "Finlandia", code: "FI" },
+    { name: "Francia", code: "FR" }, { name: "Gabon", code: "GA" },
+    { name: "Gambia", code: "GM" }, { name: "Georgia", code: "GE" },
+    { name: "Germania", code: "DE" }, { name: "Ghana", code: "GH" },
+    { name: "Giamaica", code: "JM" }, { name: "Giappone", code: "JP" },
+    { name: "Giordania", code: "JO" }, { name: "Grecia", code: "GR" },
+    { name: "Groenlandia", code: "GL" }, { name: "Guatemala", code: "GT" },
+    { name: "Guinea", code: "GN" }, { name: "Haiti", code: "HT" },
+    { name: "Honduras", code: "HN" }, { name: "Hong Kong", code: "HK" },
+    { name: "India", code: "IN" }, { name: "Indonesia", code: "ID" },
+    { name: "Iran", code: "IR" }, { name: "Iraq", code: "IQ" },
+    { name: "Irlanda", code: "IE" }, { name: "Islanda", code: "IS" },
+    { name: "Israele", code: "IL" }, { name: "Italia", code: "IT" },
+    { name: "Kazakistan", code: "KZ" }, { name: "Kenya", code: "KE" },
+    { name: "Kirghizistan", code: "KG" }, { name: "Kosovo", code: "XK" },
+    { name: "Kuwait", code: "KW" }, { name: "Laos", code: "LA" },
+    { name: "Lettonia", code: "LV" }, { name: "Libano", code: "LB" },
+    { name: "Liberia", code: "LR" }, { name: "Libia", code: "LY" },
+    { name: "Liechtenstein", code: "LI" }, { name: "Lituania", code: "LT" },
+    { name: "Lussemburgo", code: "LU" }, { name: "Macedonia del Nord", code: "MK" },
+    { name: "Madagascar", code: "MG" }, { name: "Malawi", code: "MW" },
+    { name: "Malesia", code: "MY" }, { name: "Maldive", code: "MV" },
+    { name: "Mali", code: "ML" }, { name: "Malta", code: "MT" },
+    { name: "Marocco", code: "MA" }, { name: "Mauritania", code: "MR" },
+    { name: "Mauritius", code: "MU" }, { name: "Messico", code: "MX" },
+    { name: "Moldavia", code: "MD" }, { name: "Monaco", code: "MC" },
+    { name: "Mongolia", code: "MN" }, { name: "Montenegro", code: "ME" },
+    { name: "Mozambico", code: "MZ" }, { name: "Namibia", code: "NA" },
+    { name: "Nepal", code: "NP" }, { name: "Nicaragua", code: "NI" },
+    { name: "Niger", code: "NE" }, { name: "Nigeria", code: "NG" },
+    { name: "Norvegia", code: "NO" }, { name: "Nuova Zelanda", code: "NZ" },
+    { name: "Oman", code: "OM" }, { name: "Paesi Bassi", code: "NL" },
+    { name: "Pakistan", code: "PK" }, { name: "Panama", code: "PA" },
+    { name: "Papua Nuova Guinea", code: "PG" }, { name: "Paraguay", code: "PY" },
+    { name: "Perù", code: "PE" }, { name: "Polonia", code: "PL" },
+    { name: "Portogallo", code: "PT" }, { name: "Qatar", code: "QA" },
+    { name: "Regno Unito", code: "GB" }, { name: "Repubblica Ceca", code: "CZ" },
+    { name: "Repubblica Dominicana", code: "DO" }, { name: "Romania", code: "RO" },
+    { name: "Ruanda", code: "RW" }, { name: "Russia", code: "RU" },
+    { name: "San Marino", code: "SM" }, { name: "Senegal", code: "SN" },
+    { name: "Serbia", code: "RS" }, { name: "Singapore", code: "SG" },
+    { name: "Siria", code: "SY" }, { name: "Slovacchia", code: "SK" },
+    { name: "Slovenia", code: "SI" }, { name: "Somalia", code: "SO" },
+    { name: "Spagna", code: "ES" }, { name: "Sri Lanka", code: "LK" },
+    { name: "Stati Uniti", code: "US" }, { name: "Sudafrica", code: "ZA" },
+    { name: "Sudan", code: "SD" }, { name: "Svezia", code: "SE" },
+    { name: "Svizzera", code: "CH" }, { name: "Tagikistan", code: "TJ" },
+    { name: "Taiwan", code: "TW" }, { name: "Tanzania", code: "TZ" },
+    { name: "Thailandia", code: "TH" }, { name: "Togo", code: "TG" },
+    { name: "Tunisia", code: "TN" }, { name: "Turchia", code: "TR" },
+    { name: "Turkmenistan", code: "TM" }, { name: "Ucraina", code: "UA" },
+    { name: "Uganda", code: "UG" }, { name: "Ungheria", code: "HU" },
+    { name: "Uruguay", code: "UY" }, { name: "Uzbekistan", code: "UZ" },
+    { name: "Venezuela", code: "VE" }, { name: "Vietnam", code: "VN" },
+    { name: "Yemen", code: "YE" }, { name: "Zambia", code: "ZM" },
+    { name: "Zimbabwe", code: "ZW" }
+  ].sort(function (a, b) { return a.name.localeCompare(b.name, "it"); });
+
+  var CITTA_OPTIONS = [
+    { name: "Roma", code: "IT" }, { name: "Milano", code: "IT" }, { name: "Napoli", code: "IT" },
+    { name: "Venezia", code: "IT" }, { name: "Firenze", code: "IT" }, { name: "Torino", code: "IT" },
+    { name: "Bologna", code: "IT" }, { name: "Palermo", code: "IT" }, { name: "Verona", code: "IT" },
+    { name: "Bari", code: "IT" }, { name: "Parigi", code: "FR" }, { name: "Marsiglia", code: "FR" },
+    { name: "Lione", code: "FR" }, { name: "Nizza", code: "FR" }, { name: "Tolosa", code: "FR" },
+    { name: "Bordeaux", code: "FR" }, { name: "Strasburgo", code: "FR" }, { name: "Madrid", code: "ES" },
+    { name: "Barcellona", code: "ES" }, { name: "Valencia", code: "ES" }, { name: "Siviglia", code: "ES" },
+    { name: "Bilbao", code: "ES" }, { name: "Malaga", code: "ES" }, { name: "Granada", code: "ES" },
+    { name: "Ibiza", code: "ES" }, { name: "Berlino", code: "DE" }, { name: "Monaco di Baviera", code: "DE" },
+    { name: "Amburgo", code: "DE" }, { name: "Colonia", code: "DE" }, { name: "Francoforte", code: "DE" },
+    { name: "Dresda", code: "DE" }, { name: "Londra", code: "GB" }, { name: "Manchester", code: "GB" },
+    { name: "Edimburgo", code: "GB" }, { name: "Glasgow", code: "GB" }, { name: "Liverpool", code: "GB" },
+    { name: "Birmingham", code: "GB" }, { name: "Lisbona", code: "PT" }, { name: "Porto", code: "PT" },
+    { name: "Amsterdam", code: "NL" }, { name: "Rotterdam", code: "NL" }, { name: "L'Aia", code: "NL" },
+    { name: "Utrecht", code: "NL" }, { name: "Bruxelles", code: "BE" }, { name: "Anversa", code: "BE" },
+    { name: "Bruges", code: "BE" }, { name: "Gand", code: "BE" }, { name: "Zurigo", code: "CH" },
+    { name: "Ginevra", code: "CH" }, { name: "Berna", code: "CH" }, { name: "Lucerna", code: "CH" },
+    { name: "Basilea", code: "CH" }, { name: "Vienna", code: "AT" }, { name: "Salisburgo", code: "AT" },
+    { name: "Innsbruck", code: "AT" }, { name: "Atene", code: "GR" }, { name: "Salonicco", code: "GR" },
+    { name: "Santorini", code: "GR" }, { name: "Mykonos", code: "GR" }, { name: "Creta", code: "GR" },
+    { name: "Zagabria", code: "HR" }, { name: "Dubrovnik", code: "HR" }, { name: "Spalato", code: "HR" },
+    { name: "Praga", code: "CZ" }, { name: "Brno", code: "CZ" }, { name: "Varsavia", code: "PL" },
+    { name: "Cracovia", code: "PL" }, { name: "Danzica", code: "PL" }, { name: "Breslavia", code: "PL" },
+    { name: "Budapest", code: "HU" }, { name: "Lubiana", code: "SI" }, { name: "Bratislava", code: "SK" },
+    { name: "Dublino", code: "IE" }, { name: "Cork", code: "IE" }, { name: "Copenaghen", code: "DK" },
+    { name: "Aarhus", code: "DK" }, { name: "Stoccolma", code: "SE" }, { name: "Göteborg", code: "SE" },
+    { name: "Malmö", code: "SE" }, { name: "Oslo", code: "NO" }, { name: "Bergen", code: "NO" },
+    { name: "Tromsø", code: "NO" }, { name: "Helsinki", code: "FI" }, { name: "Tampere", code: "FI" },
+    { name: "Reykjavik", code: "IS" }, { name: "Tallinn", code: "EE" }, { name: "Riga", code: "LV" },
+    { name: "Vilnius", code: "LT" }, { name: "Bucarest", code: "RO" }, { name: "Cluj-Napoca", code: "RO" },
+    { name: "Brasov", code: "RO" }, { name: "Sofia", code: "BG" }, { name: "Plovdiv", code: "BG" },
+    { name: "Belgrado", code: "RS" }, { name: "Sarajevo", code: "BA" }, { name: "Mostar", code: "BA" },
+    { name: "Kotor", code: "ME" }, { name: "Podgorica", code: "ME" }, { name: "Tirana", code: "AL" },
+    { name: "Skopje", code: "MK" }, { name: "La Valletta", code: "MT" }, { name: "Nicosia", code: "CY" },
+    { name: "Limassol", code: "CY" }, { name: "Istanbul", code: "TR" }, { name: "Ankara", code: "TR" },
+    { name: "Izmir", code: "TR" }, { name: "Antalya", code: "TR" }, { name: "Cappadocia", code: "TR" },
+    { name: "Mosca", code: "RU" }, { name: "San Pietroburgo", code: "RU" }, { name: "Kiev", code: "UA" },
+    { name: "Leopoli", code: "UA" }, { name: "Monte Carlo", code: "MC" }, { name: "Andorra la Vella", code: "AD" },
+    { name: "New York", code: "US" }, { name: "Los Angeles", code: "US" }, { name: "San Francisco", code: "US" },
+    { name: "Chicago", code: "US" }, { name: "Miami", code: "US" }, { name: "Las Vegas", code: "US" },
+    { name: "Boston", code: "US" }, { name: "Toronto", code: "CA" }, { name: "Vancouver", code: "CA" },
+    { name: "Montreal", code: "CA" }, { name: "Città del Messico", code: "MX" }, { name: "Cancún", code: "MX" },
+    { name: "Rio de Janeiro", code: "BR" }, { name: "San Paolo", code: "BR" }, { name: "Buenos Aires", code: "AR" },
+    { name: "Lima", code: "PE" }, { name: "Bogotà", code: "CO" }, { name: "Santiago del Cile", code: "CL" },
+    { name: "L'Avana", code: "CU" }, { name: "Tokyo", code: "JP" }, { name: "Kyoto", code: "JP" },
+    { name: "Osaka", code: "JP" }, { name: "Seoul", code: "KR" }, { name: "Pechino", code: "CN" },
+    { name: "Shanghai", code: "CN" }, { name: "Hong Kong", code: "HK" }, { name: "Singapore", code: "SG" },
+    { name: "Bangkok", code: "TH" }, { name: "Phuket", code: "TH" }, { name: "Bali", code: "ID" },
+    { name: "Giacarta", code: "ID" }, { name: "Hanoi", code: "VN" }, { name: "Ho Chi Minh", code: "VN" },
+    { name: "Kuala Lumpur", code: "MY" }, { name: "Manila", code: "PH" }, { name: "Dubai", code: "AE" },
+    { name: "Abu Dhabi", code: "AE" }, { name: "Doha", code: "QA" }, { name: "Tel Aviv", code: "IL" },
+    { name: "Gerusalemme", code: "IL" }, { name: "Il Cairo", code: "EG" }, { name: "Marrakech", code: "MA" },
+    { name: "Casablanca", code: "MA" }, { name: "Tunisi", code: "TN" }, { name: "Città del Capo", code: "ZA" },
+    { name: "Nairobi", code: "KE" }, { name: "Sydney", code: "AU" }, { name: "Melbourne", code: "AU" },
+    { name: "Auckland", code: "NZ" }, { name: "Wellington", code: "NZ" }, { name: "Mumbai", code: "IN" },
+    { name: "Delhi", code: "IN" }, { name: "Jaipur", code: "IN" }, { name: "Goa", code: "IN" }
+  ].sort(function (a, b) { return a.name.localeCompare(b.name, "it"); });
+
+  var CATEGORIES = {
+    paesi: { options: PAESI_OPTIONS, allowFreeText: false },
+    citta: { options: CITTA_OPTIONS, allowFreeText: true }
+  };
+
+  function slugify(str) {
+    return str.toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+
+  var RAW = {};
+  var TOPTENS = { paesi: [], citta: [] };
+  var currentSha = null;
+
+  function defaultTopTens() { return { paesi: [], citta: [] }; }
+
+  function renderList(cat) {
+    var container = document.getElementById("list-" + cat);
+    var items = TOPTENS[cat] || [];
+    if (items.length === 0) {
+      container.innerHTML = '<p class="tt-empty">Ancora nessuna voce — cercala qui sotto.</p>';
+    } else {
+      container.innerHTML = items.map(function (item, i) {
+        return '<div class="tt-row">' +
+          '<span class="tt-rank">' + (i + 1) + "°</span>" +
+          '<span class="tt-flag" aria-hidden="true">' + item.flag + '</span>' +
+          '<span class="tt-name">' + escapeHtml(item.name) + '</span>' +
+          '<span class="tt-actions">' +
+          '<button type="button" class="tt-btn" data-move="up" data-cat="' + cat + '" data-id="' + item.id + '"' + (i === 0 ? " disabled" : "") + ' aria-label="Sposta su">▲</button>' +
+          '<button type="button" class="tt-btn" data-move="down" data-cat="' + cat + '" data-id="' + item.id + '"' + (i === items.length - 1 ? " disabled" : "") + ' aria-label="Sposta giù">▼</button>' +
+          '<button type="button" class="tt-btn tt-btn--remove" data-remove data-cat="' + cat + '" data-id="' + item.id + '" aria-label="Rimuovi">×</button>' +
+          "</span></div>";
+      }).join("");
+    }
+    var searchInput = document.querySelector('[data-search="' + cat + '"] input');
+    var full = items.length >= MAX_ITEMS;
+    searchInput.disabled = full;
+    searchInput.placeholder = full ? "Lista piena (10/10)" : (cat === "paesi" ? "Cerca un paese…" : "Cerca una città…");
+  }
+
+  function renderAll() { Object.keys(CATEGORIES).forEach(renderList); }
+
+  function addItem(cat, id, name, flag) {
+    var items = TOPTENS[cat];
+    if (items.length >= MAX_ITEMS) return;
+    if (items.some(function (c) { return c.id === id; })) return;
+    items.push({ id: id, name: name, flag: flag });
+    renderList(cat);
+    schedulePublish();
+  }
+
+  function moveItem(cat, id, dir) {
+    var items = TOPTENS[cat];
+    var idx = items.findIndex(function (c) { return c.id === id; });
+    if (idx === -1) return;
+    var swapWith = dir === "up" ? idx - 1 : idx + 1;
+    if (swapWith < 0 || swapWith >= items.length) return;
+    var tmp = items[idx];
+    items[idx] = items[swapWith];
+    items[swapWith] = tmp;
+    renderList(cat);
+    schedulePublish();
+  }
+
+  function removeItem(cat, id) {
+    TOPTENS[cat] = TOPTENS[cat].filter(function (c) { return c.id !== id; });
+    renderList(cat);
+    schedulePublish();
+  }
+
+  document.querySelectorAll(".tt-list").forEach(function (list) {
+    list.addEventListener("click", function (e) {
+      var cat = list.id.replace("list-", "");
+      var moveBtn = e.target.closest("[data-move]");
+      if (moveBtn) { moveItem(cat, moveBtn.dataset.id, moveBtn.dataset.move); return; }
+      var removeBtn = e.target.closest("[data-remove]");
+      if (removeBtn) { removeItem(cat, removeBtn.dataset.id); return; }
+    });
+  });
+
+  document.querySelectorAll(".search").forEach(function (searchEl) {
+    var cat = searchEl.dataset.search;
+    var input = searchEl.querySelector("input");
+    var box = searchEl.querySelector(".suggestions");
+    var config = CATEGORIES[cat];
+
+    function closeBox() { box.hidden = true; box.innerHTML = ""; }
+
+    function showMatches() {
+      var q = input.value.trim();
+      if (q.length < 3) { closeBox(); return; }
+      var qLower = q.toLowerCase();
+      var matches = config.options.filter(function (o) {
+        return o.name.toLowerCase().indexOf(qLower) !== -1;
+      }).slice(0, 8);
+      var html = matches.map(function (o) {
+        var id = cat === "paesi" ? o.code.toLowerCase() : slugify(o.name) + "-" + o.code.toLowerCase();
+        var already = TOPTENS[cat].some(function (c) { return c.id === id; });
+        return '<button type="button" class="suggestion"' + (already ? ' disabled style="opacity:.4;cursor:default"' : "") + ' data-id="' + id + '" data-name="' + escapeHtml(o.name) + '" data-flag="' + flagForCode(o.code) + '">' +
+          '<span aria-hidden="true">' + flagForCode(o.code) + '</span><span>' + escapeHtml(o.name) + (already ? " (già in lista)" : "") + '</span></button>';
+      }).join("");
+      if (matches.length === 0 && config.allowFreeText) {
+        html += '<button type="button" class="suggestion suggestion--fallback" data-id="' + slugify(q) + '" data-name="' + escapeHtml(q) + '" data-flag="🏳️">➕ Aggiungi «' + escapeHtml(q) + '» comunque</button>';
+      } else if (matches.length === 0) {
+        html = '<div class="suggestion suggestion--fallback">Nessun risultato</div>';
+      }
+      box.innerHTML = html;
+      box.hidden = false;
+    }
+
+    input.addEventListener("input", showMatches);
+    input.addEventListener("focus", showMatches);
+    input.addEventListener("blur", function () { setTimeout(closeBox, 150); });
+
+    box.addEventListener("mousedown", function (e) {
+      var btn = e.target.closest(".suggestion");
+      if (!btn || btn.disabled) return;
+      e.preventDefault();
+      addItem(cat, btn.dataset.id, btn.dataset.name, btn.dataset.flag);
+      input.value = "";
+      closeBox();
+    });
+  });
+
+  function showSyncStatus(text, isError) {
+    var el = document.getElementById("sync-status");
+    el.textContent = text;
+    el.classList.toggle("sync-status--error", !!isError);
+    el.hidden = false;
+  }
+  function hideSyncStatus() {
+    document.getElementById("sync-status").hidden = true;
+  }
+
+  function b64EncodeUnicode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+  function b64DecodeUnicode(str) {
+    return decodeURIComponent(escape(atob(str)));
+  }
+
+  function ghHeaders() {
+    return {
+      "Accept": "application/vnd.github+json",
+      "Authorization": "Bearer " + GH_TOKEN
+    };
+  }
+
+  function loadState() {
+    return fetch(API_BASE + "?ts=" + Date.now(), { headers: ghHeaders(), cache: "no-store" })
+      .then(function (res) {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error("GET " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data) { RAW = {}; TOPTENS = defaultTopTens(); currentSha = null; return; }
+        currentSha = data.sha;
+        try {
+          RAW = JSON.parse(b64DecodeUnicode(data.content.replace(/\n/g, ""))) || {};
+          TOPTENS = RAW.topTens || defaultTopTens();
+        } catch (e) {
+          RAW = {};
+          TOPTENS = defaultTopTens();
+        }
+        if (!TOPTENS.paesi) TOPTENS.paesi = [];
+        if (!TOPTENS.citta) TOPTENS.citta = [];
+      });
+  }
+
+  var publishTimer = null;
+  var publishing = false;
+  var publishAgain = false;
+
+  function doPublish() {
+    if (publishing) { publishAgain = true; return; }
+    publishing = true;
+    showSyncStatus("Salvataggio…", false);
+    RAW.topTens = TOPTENS;
+    var body = {
+      message: "update state",
+      content: b64EncodeUnicode(JSON.stringify(RAW)),
+      sha: currentSha
+    };
+    fetch(API_BASE, {
+      method: "PUT",
+      headers: Object.assign({ "Content-Type": "application/json" }, ghHeaders()),
+      body: JSON.stringify(body)
+    })
+      .then(function (res) {
+        if (res.status === 409 || res.status === 422) {
+          return loadState().then(function () { return doPublish(); });
+        }
+        if (!res.ok) throw new Error("PUT " + res.status);
+        return res.json().then(function (data) {
+          currentSha = data.content.sha;
+          hideSyncStatus();
+        });
+      })
+      .catch(function (err) {
+        showSyncStatus("Salvataggio fallito: " + (err && err.message ? err.message : "errore"), true);
+      })
+      .then(function () {
+        publishing = false;
+        if (publishAgain) { publishAgain = false; doPublish(); }
+      });
+  }
+
+  function schedulePublish() {
+    if (publishTimer) clearTimeout(publishTimer);
+    publishTimer = setTimeout(function () { publishTimer = null; doPublish(); }, 600);
+  }
+
+  showSyncStatus("Caricamento…", false);
+  loadState()
+    .then(function () { hideSyncStatus(); renderAll(); })
+    .catch(function (err) {
+      TOPTENS = defaultTopTens();
+      renderAll();
+      showSyncStatus("Caricamento fallito: " + (err && err.message ? err.message : "errore"), true);
+    });
+})();
+</script>
+</body>
+</html>

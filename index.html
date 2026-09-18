@@ -116,6 +116,8 @@
   .dot--none { background: var(--red); }
   .dot--booked { background: var(--yellow); }
   .dot--visited { background: var(--green); }
+  .topten-link { display: block; text-align: center; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.05rem; color: var(--accent-ink); text-decoration: none; transition: border-color 0.12s ease; }
+  .topten-link:hover { border-color: var(--accent); }
   .footer { padding-top: 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--faint); font-size: 0.82rem; }
   #sync-status { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.02em; }
   #sync-status.sync-status--error { color: var(--red); }
@@ -155,6 +157,8 @@
       <select id="extra-select" aria-label="Aggiungi un paese"></select>
     </div>
   </section>
+
+  <a class="topten-link" href="top10.html">Top Ten →</a>
 
   <footer class="footer">
     <span>Salvato per tutti, in tempo reale</span>
@@ -231,6 +235,7 @@
   var sortState = { by: "name", dir: "asc" };
   var STATE = null;
   var EXTRA_LIST = [];
+  var RAW = {};
   var currentSha = null;
 
   function defaultState() {
@@ -486,13 +491,14 @@
         return res.json();
       })
       .then(function (data) {
-        if (!data) { STATE = defaultState(); EXTRA_LIST = []; currentSha = null; return; }
+        if (!data) { STATE = defaultState(); EXTRA_LIST = []; RAW = {}; currentSha = null; return; }
         currentSha = data.sha;
         try {
-          var parsed = JSON.parse(b64DecodeUnicode(data.content.replace(/\n/g, "")));
-          STATE = parsed.state || defaultState();
-          EXTRA_LIST = parsed.extraList || [];
+          RAW = JSON.parse(b64DecodeUnicode(data.content.replace(/\n/g, ""))) || {};
+          STATE = RAW.state || defaultState();
+          EXTRA_LIST = RAW.extraList || [];
         } catch (e) {
+          RAW = {};
           STATE = defaultState();
           EXTRA_LIST = [];
         }
@@ -513,9 +519,11 @@
     if (publishing) { publishAgain = true; return; }
     publishing = true;
     showSyncStatus("Salvataggio…", false);
+    RAW.state = STATE;
+    RAW.extraList = EXTRA_LIST;
     var body = {
       message: "update state",
-      content: b64EncodeUnicode(JSON.stringify({ state: STATE, extraList: EXTRA_LIST })),
+      content: b64EncodeUnicode(JSON.stringify(RAW)),
       sha: currentSha
     };
     fetch(API_BASE, {
