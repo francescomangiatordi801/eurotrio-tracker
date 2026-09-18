@@ -116,6 +116,18 @@
   .footer { padding-top: 20px; border-top: 1px solid var(--line); color: var(--faint); font-size: 0.82rem; }
   #sync-status { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.02em; }
   #sync-status.sync-status--error { color: var(--red); }
+  .whoami-bar { display: flex; align-items: center; gap: 8px; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); }
+  .whoami-change { all: unset; cursor: pointer; color: var(--accent-ink); text-decoration: underline; }
+  .person-group--locked .person-heading::after { content: " 🔒"; }
+  .search--locked { opacity: 0.55; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(20, 22, 20, 0.55); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .modal-backdrop[hidden] { display: none; }
+  .modal-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 28px 24px; max-width: 320px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .modal-title { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.4rem; margin: 0 0 6px; text-align: center; }
+  .modal-subtitle { color: var(--muted); font-size: 0.85rem; text-align: center; margin: 0 0 20px; }
+  .modal-buttons { display: flex; flex-direction: column; gap: 10px; }
+  .modal-btn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; padding: 13px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); font-size: 1rem; font-weight: 500; }
+  .modal-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
 </style>
 </head>
 <body>
@@ -126,7 +138,23 @@
     <div class="eyebrow">Classifiche</div>
     <h1>Top Ten</h1>
     <p class="pitch">Una classifica per ciascuno — aggiungi, riordina con le frecce, togli con la ×.</p>
+    <div class="whoami-bar" id="whoami-bar" hidden>
+      <span id="whoami-label"></span>
+      <button type="button" class="whoami-change" id="whoami-change">cambia</button>
+    </div>
   </header>
+
+  <div class="modal-backdrop" id="whoami-modal" hidden>
+    <div class="modal-card">
+      <div class="modal-title">Chi sei?</div>
+      <p class="modal-subtitle">Così puoi modificare solo la tua classifica.</p>
+      <div class="modal-buttons">
+        <button type="button" class="modal-btn" data-whoami="gamba">Gamba</button>
+        <button type="button" class="modal-btn" data-whoami="beppe">Beppe</button>
+        <button type="button" class="modal-btn" data-whoami="rutix">Rutix</button>
+      </div>
+    </div>
+  </div>
 
   <section class="category" data-category="paesi">
     <div class="category-heading">🌍 Top 10 Paesi</div>
@@ -504,6 +532,8 @@
   };
 
   var PEOPLE = ["gamba", "beppe", "rutix"];
+  var PEOPLE_LABEL = { gamba: "Gamba", beppe: "Beppe", rutix: "Rutix" };
+  var WHOAMI_KEY = "eurotrio-whoami";
 
   function slugify(str) {
     return str.toLowerCase()
@@ -517,6 +547,7 @@
     });
   }
 
+  var CURRENT_PERSON = null;
   var RAW = {};
   var TOPTENS = defaultTopTens();
   var currentSha = null;
@@ -550,31 +581,39 @@
   function renderList(cat, person) {
     var container = document.getElementById("list-" + cat + "-" + person);
     var items = (TOPTENS[cat] && TOPTENS[cat][person]) || [];
+    var editable = person === CURRENT_PERSON;
     if (items.length === 0) {
       var emptyText = CATEGORIES[cat].emptyText || "Ancora nessuna voce — cercala qui sotto.";
       container.innerHTML = '<p class="tt-empty">' + emptyText + '</p>';
     } else {
       container.innerHTML = items.map(function (item, i) {
+        var actions = !editable ? "" : '<span class="tt-actions">' +
+          '<button type="button" class="tt-btn" data-move="up" data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '"' + (i === 0 ? " disabled" : "") + ' aria-label="Sposta su">▲</button>' +
+          '<button type="button" class="tt-btn" data-move="down" data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '"' + (i === items.length - 1 ? " disabled" : "") + ' aria-label="Sposta giù">▼</button>' +
+          '<button type="button" class="tt-btn tt-btn--remove" data-remove data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '" aria-label="Rimuovi">×</button>' +
+          "</span>";
         return '<div class="tt-row">' +
           '<span class="tt-rank">' + (i + 1) + "°</span>" +
           '<span class="tt-flag" aria-hidden="true">' + item.flag + '</span>' +
           '<span class="tt-name">' + escapeHtml(item.name) + '</span>' +
-          '<span class="tt-actions">' +
-          '<button type="button" class="tt-btn" data-move="up" data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '"' + (i === 0 ? " disabled" : "") + ' aria-label="Sposta su">▲</button>' +
-          '<button type="button" class="tt-btn" data-move="down" data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '"' + (i === items.length - 1 ? " disabled" : "") + ' aria-label="Sposta giù">▼</button>' +
-          '<button type="button" class="tt-btn tt-btn--remove" data-remove data-cat="' + cat + '" data-person="' + person + '" data-id="' + item.id + '" aria-label="Rimuovi">×</button>' +
-          "</span></div>";
+          actions +
+          "</div>";
       }).join("");
     }
-    var searchInput = document.querySelector('.search[data-cat="' + cat + '"][data-person="' + person + '"] input');
+    var searchEl = document.querySelector('.search[data-cat="' + cat + '"][data-person="' + person + '"]');
+    var searchInput = searchEl.querySelector("input");
     var full = items.length >= MAX_ITEMS;
-    searchInput.disabled = full;
-    searchInput.placeholder = full ? "Lista piena (10/10)" : CATEGORIES[cat].placeholder;
+    searchEl.classList.toggle("search--locked", !editable);
+    searchInput.disabled = full || !editable;
+    searchInput.placeholder = !editable ? "Solo " + PEOPLE_LABEL[person] + " può modificare" : (full ? "Lista piena (10/10)" : CATEGORIES[cat].placeholder);
   }
 
   function renderAll() {
     Object.keys(CATEGORIES).forEach(function (cat) {
       PEOPLE.forEach(function (person) { renderList(cat, person); });
+    });
+    document.querySelectorAll(".person-group").forEach(function (g) {
+      g.classList.toggle("person-group--locked", g.dataset.person !== CURRENT_PERSON);
     });
   }
 
@@ -811,6 +850,58 @@
     if (publishTimer) clearTimeout(publishTimer);
     publishTimer = setTimeout(function () { publishTimer = null; doPublish(); }, 600);
   }
+
+  var whoamiModal = document.getElementById("whoami-modal");
+  var whoamiBar = document.getElementById("whoami-bar");
+  var whoamiLabel = document.getElementById("whoami-label");
+
+  function loadIdentity() {
+    try {
+      var v = localStorage.getItem(WHOAMI_KEY);
+      return PEOPLE.indexOf(v) !== -1 ? v : null;
+    } catch (e) { return null; }
+  }
+
+  function saveIdentity(person) {
+    try { localStorage.setItem(WHOAMI_KEY, person); } catch (e) {}
+  }
+
+  function clearIdentity() {
+    try { localStorage.removeItem(WHOAMI_KEY); } catch (e) {}
+  }
+
+  function updateWhoamiBar() {
+    if (CURRENT_PERSON) {
+      whoamiLabel.textContent = "Sei " + PEOPLE_LABEL[CURRENT_PERSON];
+      whoamiBar.hidden = false;
+    } else {
+      whoamiBar.hidden = true;
+    }
+  }
+
+  function setIdentity(person) {
+    CURRENT_PERSON = person;
+    saveIdentity(person);
+    whoamiModal.hidden = true;
+    updateWhoamiBar();
+    renderAll();
+  }
+
+  document.querySelectorAll("[data-whoami]").forEach(function (btn) {
+    btn.addEventListener("click", function () { setIdentity(btn.dataset.whoami); });
+  });
+
+  document.getElementById("whoami-change").addEventListener("click", function () {
+    CURRENT_PERSON = null;
+    clearIdentity();
+    updateWhoamiBar();
+    renderAll();
+    whoamiModal.hidden = false;
+  });
+
+  CURRENT_PERSON = loadIdentity();
+  whoamiModal.hidden = !!CURRENT_PERSON;
+  updateWhoamiBar();
 
   showSyncStatus("Caricamento…", false);
   loadState()
