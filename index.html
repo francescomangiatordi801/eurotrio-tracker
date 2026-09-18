@@ -80,6 +80,37 @@
   .table--extra { border-top: 1px solid var(--line); padding-top: 24px; }
   .extra-heading { display: flex; align-items: baseline; gap: 10px; font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.05rem; padding-bottom: 10px; }
   .extra-note { font-family: "Work Sans", sans-serif; font-weight: 400; font-size: 0.82rem; color: var(--faint); }
+  .extra-empty { color: var(--faint); font-size: 0.9rem; padding: 10px 4px; }
+  .add-row { display: flex; gap: 8px; margin-top: 14px; }
+  .add-row input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .add-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .add-row button {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+  .add-row button:hover { background: var(--accent-ink); }
+  .add-row button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .row { display: grid; grid-template-columns: 1fr repeat(3, 30px); align-items: center; gap: 6px 10px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
   .row--head { border-bottom: 1px solid var(--faint); padding-bottom: 10px; }
   .row--head .name { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
@@ -131,9 +162,13 @@
     <div id="rows"></div>
   </section>
 
-  <section id="extra" class="table table--extra" aria-label="Altri paesi">
-    <div class="extra-heading">Extra<span class="extra-note">non contano nel totale sopra</span></div>
+  <section id="extra" class="table table--extra" aria-label="Paesi extraeuropei">
+    <div class="extra-heading">Paesi Extraeuropei<span class="extra-note">non contano nel totale sopra</span></div>
     <div id="extra-rows"></div>
+    <div class="add-row">
+      <input type="text" id="extra-input" placeholder="Aggiungi un paese…" maxlength="40" autocomplete="off">
+      <button type="button" id="extra-add-btn" aria-label="Aggiungi paese">+</button>
+    </div>
   </section>
 
   <footer class="footer">
@@ -203,13 +238,6 @@
     { id: "ungheria", name: "Ungheria", flag: "\u{1F1ED}\u{1F1FA}" }
   ];
 
-  var EXTRA_COUNTRIES = [
-    { id: "armenia", name: "Armenia", flag: "\u{1F1E6}\u{1F1F2}" },
-    { id: "azerbaigian", name: "Azerbaigian", flag: "\u{1F1E6}\u{1F1FF}" },
-    { id: "georgia", name: "Georgia", flag: "\u{1F1EC}\u{1F1EA}" },
-    { id: "kazakistan", name: "Kazakistan", flag: "\u{1F1F0}\u{1F1FF}" }
-  ];
-
   var PEOPLE = ["gamba", "beppe", "rutix"];
   var PEOPLE_LABEL = { gamba: "Gamba", beppe: "Beppe", rutix: "Rutix" };
   var NEXT = { none: "booked", booked: "visited", visited: "none" };
@@ -217,14 +245,23 @@
 
   var sortState = { by: "name", dir: "asc" };
   var STATE = null;
+  var EXTRA_LIST = [];
   var currentSha = null;
 
   function defaultState() {
     var s = {};
-    COUNTRIES.concat(EXTRA_COUNTRIES).forEach(function (c) {
+    COUNTRIES.forEach(function (c) {
       s[c.id] = { gamba: "none", beppe: "none", rutix: "none" };
     });
     return s;
+  }
+
+  function slugify(str) {
+    var slug = str.trim().toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    return slug || "paese";
   }
 
   function arrowFor(key) {
@@ -307,16 +344,43 @@
 
   function renderExtra() {
     var container = document.getElementById("extra-rows");
-    var body = EXTRA_COUNTRIES.map(function (c) {
-      var st = STATE[c.id];
+    if (EXTRA_LIST.length === 0) {
+      container.innerHTML = '<p class="extra-empty">Ancora nessun paese — aggiungine uno qui sotto.</p>';
+      return;
+    }
+    var body = EXTRA_LIST.map(function (c) {
+      var st = STATE[c.id] || { gamba: "none", beppe: "none", rutix: "none" };
       var dots = PEOPLE.map(function (p) {
         var status = st[p];
         var label = PEOPLE_LABEL[p] + ", " + c.name + ": " + LABEL[status];
         return '<button type="button" class="dot dot--' + status + '" data-country="' + c.id + '" data-person="' + p + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></button>';
       }).join("");
-      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + c.flag + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
+      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">🌐</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
     }).join("");
     container.innerHTML = extraHeadRowHTML() + body;
+  }
+
+  function addExtraCountry(rawName) {
+    var name = (rawName || "").trim();
+    if (!name) return;
+    var exists = EXTRA_LIST.some(function (c) { return c.name.toLowerCase() === name.toLowerCase(); });
+    if (exists) {
+      showSyncStatus("«" + name + "» è già in lista", true);
+      setTimeout(hideSyncStatus, 1800);
+      return;
+    }
+    var id = slugify(name);
+    var existingIds = EXTRA_LIST.map(function (c) { return c.id; }).concat(Object.keys(STATE));
+    var uniqueId = id;
+    var n = 2;
+    while (existingIds.indexOf(uniqueId) !== -1) {
+      uniqueId = id + "-" + n;
+      n++;
+    }
+    EXTRA_LIST.push({ id: uniqueId, name: name });
+    STATE[uniqueId] = { gamba: "none", beppe: "none", rutix: "none" };
+    renderExtra();
+    schedulePublish();
   }
 
   function renderSummary() {
@@ -370,14 +434,20 @@
         return res.json();
       })
       .then(function (data) {
-        if (!data) { STATE = defaultState(); currentSha = null; return; }
+        if (!data) { STATE = defaultState(); EXTRA_LIST = []; currentSha = null; return; }
         currentSha = data.sha;
         try {
-          STATE = JSON.parse(b64DecodeUnicode(data.content.replace(/\n/g, "")));
+          var parsed = JSON.parse(b64DecodeUnicode(data.content.replace(/\n/g, "")));
+          STATE = parsed.state || defaultState();
+          EXTRA_LIST = parsed.extraList || [];
         } catch (e) {
           STATE = defaultState();
+          EXTRA_LIST = [];
         }
-        COUNTRIES.concat(EXTRA_COUNTRIES).forEach(function (c) {
+        COUNTRIES.forEach(function (c) {
+          if (!STATE[c.id]) STATE[c.id] = { gamba: "none", beppe: "none", rutix: "none" };
+        });
+        EXTRA_LIST.forEach(function (c) {
           if (!STATE[c.id]) STATE[c.id] = { gamba: "none", beppe: "none", rutix: "none" };
         });
       });
@@ -393,7 +463,7 @@
     showSyncStatus("Salvataggio…", false);
     var body = {
       message: "update state",
-      content: b64EncodeUnicode(JSON.stringify(STATE)),
+      content: b64EncodeUnicode(JSON.stringify({ state: STATE, extraList: EXTRA_LIST })),
       sha: currentSha
     };
     fetch(API_BASE, {
@@ -441,6 +511,17 @@
 
   document.getElementById("app").addEventListener("click", onTableClick);
   document.getElementById("extra").addEventListener("click", onTableClick);
+
+  function submitExtraInput() {
+    var input = document.getElementById("extra-input");
+    addExtraCountry(input.value);
+    input.value = "";
+    input.focus();
+  }
+  document.getElementById("extra-add-btn").addEventListener("click", submitExtraInput);
+  document.getElementById("extra-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") submitExtraInput();
+  });
 
   showSyncStatus("Caricamento…", false);
   loadState()
