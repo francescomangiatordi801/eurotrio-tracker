@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EuroTrio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --ink: #20242a;
+    --muted: #65707a;
+    --faint: #9aa2a8;
+    --accent: #2f6a63;
+    --accent-ink: #1d4640;
+    --line: #e3ddd0;
+    --red: #c1462f;
+    --yellow: #c98a2c;
+    --green: #3f8a5c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12171a;
+      --surface: #1a2024;
+      --ink: #eef1ef;
+      --muted: #9aa7ae;
+      --faint: #5c666c;
+      --accent: #6fb3a8;
+      --accent-ink: #9ed4c9;
+      --line: #293034;
+      --red: #e2735a;
+      --yellow: #e0ab5a;
+      --green: #6cb787;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Work Sans", system-ui, -apple-system, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.55;
+    margin: 0;
+    padding-inline: 20px;
+    padding-block: 44px 64px;
+  }
+  .page { max-width: 660px; margin-inline: auto; display: flex; flex-direction: column; gap: 32px; }
+  h1 {
+    font-family: "Spectral", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 6vw, 2.6rem);
+    margin: 0;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .eyebrow::before { content: ""; width: 20px; height: 1px; background: var(--accent); display: inline-block; }
+  .hero { display: flex; flex-direction: column; gap: 12px; }
+  .pitch { color: var(--muted); max-width: 52ch; margin: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 0.88rem; color: var(--muted); }
+  .chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+  .chip--none { background: var(--red); }
+  .chip--booked { background: var(--yellow); }
+  .chip--visited { background: var(--green); }
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .stat-name { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.05rem; }
+  .stat-counts { display: flex; flex-direction: column; gap: 5px; }
+  .count { display: flex; align-items: center; font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--muted); gap: 7px; }
+  .table { display: flex; flex-direction: column; }
+  .table--extra { border-top: 1px solid var(--line); padding-top: 24px; }
+  .extra-heading { display: flex; align-items: baseline; gap: 10px; font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.05rem; padding-bottom: 10px; }
+  .extra-note { font-family: "Work Sans", sans-serif; font-weight: 400; font-size: 0.82rem; color: var(--faint); }
+  .row { display: grid; grid-template-columns: 1fr repeat(3, 30px); align-items: center; gap: 6px 10px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
+  .row--head { border-bottom: 1px solid var(--faint); padding-bottom: 10px; }
+  .row--head .name { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
+  .head-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border-radius: 3px; }
+  .head-btn--name { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
+  .head-btn--col { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.62rem; letter-spacing: 0.03em; text-transform: uppercase; color: var(--faint); justify-self: center; }
+  .head-btn--active { color: var(--ink); }
+  .head-btn:hover { color: var(--ink); }
+  .sort-arrow { font-size: 0.85em; }
+  .sort-arrow--idle { color: var(--faint); opacity: 0.55; }
+  .sort-arrow--active { color: var(--accent-ink); }
+  .name { font-size: 1.11rem; color: var(--ink); }
+  .flag { margin-right: 8px; font-size: 1.2em; }
+  .dots { display: contents; }
+  .dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); padding: 0; cursor: pointer; justify-self: center; transition: transform 0.12s ease; }
+  .dot:hover { transform: scale(1.15); }
+  .dot:active { transform: scale(0.92); }
+  .dot--none { background: var(--red); }
+  .dot--booked { background: var(--yellow); }
+  .dot--visited { background: var(--green); }
+  .footer { padding-top: 20px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--faint); font-size: 0.82rem; }
+  #sync-status { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.02em; }
+  #sync-status.sync-status--error { color: var(--red); }
+  @media (max-width: 420px) {
+    .row { grid-template-columns: 1fr repeat(3, 26px); gap: 5px 8px; }
+    .dot { width: 22px; height: 22px; }
+    .summary { gap: 8px; }
+    .stat { padding: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">Tracker di viaggio</div>
+    <h1>EuroTrio</h1>
+    <p class="pitch">Chi è stato dove, chi ha prenotato e chi deve ancora andarci — tocca un pallino per cambiarne lo stato.</p>
+  </header>
+
+  <section class="legend" aria-label="Legenda">
+    <span class="legend-item"><i class="chip chip--visited"></i>Fatto</span>
+    <span class="legend-item"><i class="chip chip--booked"></i>Prenotato</span>
+    <span class="legend-item"><i class="chip chip--none"></i>Non ancora</span>
+  </section>
+
+  <section id="summary" class="summary" aria-label="Riepilogo per persona"></section>
+
+  <section id="app" class="table" aria-label="Paesi europei">
+    <div id="rows"></div>
+  </section>
+
+  <section id="extra" class="table table--extra" aria-label="Altri paesi">
+    <div class="extra-heading">Extra<span class="extra-note">non contano nel totale sopra</span></div>
+    <div id="extra-rows"></div>
+  </section>
+
+  <footer class="footer">
+    <span>Salvato per tutti, in tempo reale</span>
+    <span id="sync-status" hidden></span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var GH_OWNER = "francescomangiatordi801";
+  var GH_REPO = "eurotrio-tracker";
+  var GH_PATH = "data.json";
+  var GH_TOKEN = "__GH_TOKEN__";
+  var API_BASE = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_PATH;
+
+  var COUNTRIES = [
+    { id: "albania", name: "Albania", flag: "\u{1F1E6}\u{1F1F1}" },
+    { id: "andorra", name: "Andorra", flag: "\u{1F1E6}\u{1F1E9}" },
+    { id: "austria", name: "Austria", flag: "\u{1F1E6}\u{1F1F9}" },
+    { id: "belgio", name: "Belgio", flag: "\u{1F1E7}\u{1F1EA}" },
+    { id: "bielorussia", name: "Bielorussia", flag: "\u{1F1E7}\u{1F1FE}" },
+    { id: "bosnia", name: "Bosnia ed Erzegovina", flag: "\u{1F1E7}\u{1F1E6}" },
+    { id: "bulgaria", name: "Bulgaria", flag: "\u{1F1E7}\u{1F1EC}" },
+    { id: "cipro", name: "Cipro", flag: "\u{1F1E8}\u{1F1FE}" },
+    { id: "vaticano", name: "Città del Vaticano", flag: "\u{1F1FB}\u{1F1E6}" },
+    { id: "croazia", name: "Croazia", flag: "\u{1F1ED}\u{1F1F7}" },
+    { id: "danimarca", name: "Danimarca", flag: "\u{1F1E9}\u{1F1F0}" },
+    { id: "estonia", name: "Estonia", flag: "\u{1F1EA}\u{1F1EA}" },
+    { id: "finlandia", name: "Finlandia", flag: "\u{1F1EB}\u{1F1EE}" },
+    { id: "francia", name: "Francia", flag: "\u{1F1EB}\u{1F1F7}" },
+    { id: "galles", name: "Galles", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}" },
+    { id: "germania", name: "Germania", flag: "\u{1F1E9}\u{1F1EA}" },
+    { id: "grecia", name: "Grecia", flag: "\u{1F1EC}\u{1F1F7}" },
+    { id: "inghilterra", name: "Inghilterra", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { id: "irlanda", name: "Irlanda", flag: "\u{1F1EE}\u{1F1EA}" },
+    { id: "irlanda-nord", name: "Irlanda del Nord", flag: "\u{1F1EC}\u{1F1E7}" },
+    { id: "islanda", name: "Islanda", flag: "\u{1F1EE}\u{1F1F8}" },
+    { id: "italia", name: "Italia", flag: "\u{1F1EE}\u{1F1F9}" },
+    { id: "kosovo", name: "Kosovo", flag: "\u{1F1FD}\u{1F1F0}" },
+    { id: "lettonia", name: "Lettonia", flag: "\u{1F1F1}\u{1F1FB}" },
+    { id: "liechtenstein", name: "Liechtenstein", flag: "\u{1F1F1}\u{1F1EE}" },
+    { id: "lituania", name: "Lituania", flag: "\u{1F1F1}\u{1F1F9}" },
+    { id: "lussemburgo", name: "Lussemburgo", flag: "\u{1F1F1}\u{1F1FA}" },
+    { id: "macedonia-nord", name: "Macedonia del Nord", flag: "\u{1F1F2}\u{1F1F0}" },
+    { id: "malta", name: "Malta", flag: "\u{1F1F2}\u{1F1F9}" },
+    { id: "moldavia", name: "Moldavia", flag: "\u{1F1F2}\u{1F1E9}" },
+    { id: "monaco", name: "Monaco", flag: "\u{1F1F2}\u{1F1E8}" },
+    { id: "montenegro", name: "Montenegro", flag: "\u{1F1F2}\u{1F1EA}" },
+    { id: "norvegia", name: "Norvegia", flag: "\u{1F1F3}\u{1F1F4}" },
+    { id: "paesi-bassi", name: "Paesi Bassi", flag: "\u{1F1F3}\u{1F1F1}" },
+    { id: "polonia", name: "Polonia", flag: "\u{1F1F5}\u{1F1F1}" },
+    { id: "portogallo", name: "Portogallo", flag: "\u{1F1F5}\u{1F1F9}" },
+    { id: "repubblica-ceca", name: "Repubblica Ceca", flag: "\u{1F1E8}\u{1F1FF}" },
+    { id: "romania", name: "Romania", flag: "\u{1F1F7}\u{1F1F4}" },
+    { id: "russia", name: "Russia", flag: "\u{1F1F7}\u{1F1FA}" },
+    { id: "san-marino", name: "San Marino", flag: "\u{1F1F8}\u{1F1F2}" },
+    { id: "scozia", name: "Scozia", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}" },
+    { id: "serbia", name: "Serbia", flag: "\u{1F1F7}\u{1F1F8}" },
+    { id: "slovacchia", name: "Slovacchia", flag: "\u{1F1F8}\u{1F1F0}" },
+    { id: "slovenia", name: "Slovenia", flag: "\u{1F1F8}\u{1F1EE}" },
+    { id: "spagna", name: "Spagna", flag: "\u{1F1EA}\u{1F1F8}" },
+    { id: "svezia", name: "Svezia", flag: "\u{1F1F8}\u{1F1EA}" },
+    { id: "svizzera", name: "Svizzera", flag: "\u{1F1E8}\u{1F1ED}" },
+    { id: "turchia", name: "Turchia", flag: "\u{1F1F9}\u{1F1F7}" },
+    { id: "ucraina", name: "Ucraina", flag: "\u{1F1FA}\u{1F1E6}" },
+    { id: "ungheria", name: "Ungheria", flag: "\u{1F1ED}\u{1F1FA}" }
+  ];
+
+  var EXTRA_COUNTRIES = [
+    { id: "armenia", name: "Armenia", flag: "\u{1F1E6}\u{1F1F2}" },
+    { id: "azerbaigian", name: "Azerbaigian", flag: "\u{1F1E6}\u{1F1FF}" },
+    { id: "georgia", name: "Georgia", flag: "\u{1F1EC}\u{1F1EA}" },
+    { id: "kazakistan", name: "Kazakistan", flag: "\u{1F1F0}\u{1F1FF}" }
+  ];
+
+  var PEOPLE = ["gamba", "beppe", "rutix"];
+  var PEOPLE_LABEL = { gamba: "Gamba", beppe: "Beppe", rutix: "Rutix" };
+  var NEXT = { none: "booked", booked: "visited", visited: "none" };
+  var LABEL = { none: "Non ancora", booked: "Prenotato", visited: "Fatto" };
+
+  var sortState = { by: "name", dir: "asc" };
+  var STATE = null;
+  var currentSha = null;
+
+  function defaultState() {
+    var s = {};
+    COUNTRIES.concat(EXTRA_COUNTRIES).forEach(function (c) {
+      s[c.id] = { gamba: "none", beppe: "none", rutix: "none" };
+    });
+    return s;
+  }
+
+  function arrowFor(key) {
+    if (sortState.by !== key) return '<span class="sort-arrow sort-arrow--idle">⇅</span>';
+    var up = key === "name" ? sortState.dir === "asc" : sortState.dir === "green-first";
+    return '<span class="sort-arrow sort-arrow--active">' + (up ? "▲" : "▼") + "</span>";
+  }
+
+  function sortedCountries() {
+    var list = COUNTRIES.slice();
+    if (sortState.by === "name") {
+      list.sort(function (a, b) { return a.name.localeCompare(b.name, "it"); });
+      if (sortState.dir === "desc") list.reverse();
+    } else {
+      var person = sortState.by;
+      var rank = sortState.dir === "green-first"
+        ? { visited: 0, booked: 1, none: 2 }
+        : { none: 0, booked: 1, visited: 2 };
+      list.sort(function (a, b) {
+        var d = rank[STATE[a.id][person]] - rank[STATE[b.id][person]];
+        if (d !== 0) return d;
+        return a.name.localeCompare(b.name, "it");
+      });
+    }
+    return list;
+  }
+
+  function handleSortClick(key) {
+    if (key === "name") {
+      sortState = sortState.by === "name"
+        ? { by: "name", dir: sortState.dir === "asc" ? "desc" : "asc" }
+        : { by: "name", dir: "asc" };
+    } else {
+      sortState = sortState.by === key
+        ? { by: key, dir: sortState.dir === "green-first" ? "red-first" : "green-first" }
+        : { by: key, dir: "green-first" };
+    }
+    renderApp();
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+
+  function headRowHTML() {
+    var nameActive = sortState.by === "name" ? " head-btn--active" : "";
+    var html = '<div class="row row--head">' +
+      '<button type="button" class="head-btn head-btn--name' + nameActive + '" data-sort="name">Paese' + arrowFor("name") + "</button>" +
+      '<div class="dots">';
+    PEOPLE.forEach(function (p) {
+      var active = sortState.by === p ? " head-btn--active" : "";
+      html += '<button type="button" class="head-btn head-btn--col' + active + '" data-sort="' + p + '">' + PEOPLE_LABEL[p] + arrowFor(p) + "</button>";
+    });
+    html += "</div></div>";
+    return html;
+  }
+
+  function renderApp() {
+    var rows = document.getElementById("rows");
+    var body = sortedCountries().map(function (c) {
+      var st = STATE[c.id];
+      var dots = PEOPLE.map(function (p) {
+        var status = st[p];
+        var label = PEOPLE_LABEL[p] + ", " + c.name + ": " + LABEL[status];
+        return '<button type="button" class="dot dot--' + status + '" data-country="' + c.id + '" data-person="' + p + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></button>';
+      }).join("");
+      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + c.flag + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
+    }).join("");
+    rows.innerHTML = headRowHTML() + body;
+  }
+
+  function extraHeadRowHTML() {
+    var html = '<div class="row row--head"><span class="head-btn--name">Paese</span><div class="dots">';
+    PEOPLE.forEach(function (p) { html += '<span class="head-btn--col">' + PEOPLE_LABEL[p] + "</span>"; });
+    html += "</div></div>";
+    return html;
+  }
+
+  function renderExtra() {
+    var container = document.getElementById("extra-rows");
+    var body = EXTRA_COUNTRIES.map(function (c) {
+      var st = STATE[c.id];
+      var dots = PEOPLE.map(function (p) {
+        var status = st[p];
+        var label = PEOPLE_LABEL[p] + ", " + c.name + ": " + LABEL[status];
+        return '<button type="button" class="dot dot--' + status + '" data-country="' + c.id + '" data-person="' + p + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></button>';
+      }).join("");
+      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + c.flag + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
+    }).join("");
+    container.innerHTML = extraHeadRowHTML() + body;
+  }
+
+  function renderSummary() {
+    var summary = document.getElementById("summary");
+    summary.innerHTML = PEOPLE.map(function (p) {
+      var counts = { none: 0, booked: 0, visited: 0 };
+      COUNTRIES.forEach(function (c) { counts[STATE[c.id][p]]++; });
+      return (
+        '<div class="stat">' +
+        '<div class="stat-name">' + PEOPLE_LABEL[p] + "</div>" +
+        '<div class="stat-counts">' +
+        '<span class="count"><i class="chip chip--visited"></i>' + counts.visited + " fatti</span>" +
+        '<span class="count"><i class="chip chip--booked"></i>' + counts.booked + " prenotati</span>" +
+        '<span class="count"><i class="chip chip--none"></i>' + counts.none + " da fare</span>" +
+        "</div></div>"
+      );
+    }).join("");
+  }
+
+  function renderAll() { renderApp(); renderExtra(); renderSummary(); }
+
+  function showSyncStatus(text, isError) {
+    var el = document.getElementById("sync-status");
+    el.textContent = text;
+    el.classList.toggle("sync-status--error", !!isError);
+    el.hidden = false;
+  }
+  function hideSyncStatus() {
+    document.getElementById("sync-status").hidden = true;
+  }
+
+  function b64EncodeUnicode(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+  function b64DecodeUnicode(str) {
+    return decodeURIComponent(escape(atob(str)));
+  }
+
+  function ghHeaders() {
+    return {
+      "Accept": "application/vnd.github+json",
+      "Authorization": "Bearer " + GH_TOKEN
+    };
+  }
+
+  function loadState() {
+    return fetch(API_BASE + "?ts=" + Date.now(), { headers: ghHeaders(), cache: "no-store" })
+      .then(function (res) {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error("GET " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data) { STATE = defaultState(); currentSha = null; return; }
+        currentSha = data.sha;
+        try {
+          STATE = JSON.parse(b64DecodeUnicode(data.content.replace(/\n/g, "")));
+        } catch (e) {
+          STATE = defaultState();
+        }
+        COUNTRIES.concat(EXTRA_COUNTRIES).forEach(function (c) {
+          if (!STATE[c.id]) STATE[c.id] = { gamba: "none", beppe: "none", rutix: "none" };
+        });
+      });
+  }
+
+  var publishTimer = null;
+  var publishing = false;
+  var publishAgain = false;
+
+  function doPublish() {
+    if (publishing) { publishAgain = true; return; }
+    publishing = true;
+    showSyncStatus("Salvataggio…", false);
+    var body = {
+      message: "update state",
+      content: b64EncodeUnicode(JSON.stringify(STATE)),
+      sha: currentSha
+    };
+    fetch(API_BASE, {
+      method: "PUT",
+      headers: Object.assign({ "Content-Type": "application/json" }, ghHeaders()),
+      body: JSON.stringify(body)
+    })
+      .then(function (res) {
+        if (res.status === 409 || res.status === 422) {
+          return loadState().then(function () { return doPublish(); });
+        }
+        if (!res.ok) throw new Error("PUT " + res.status);
+        return res.json().then(function (data) {
+          currentSha = data.content.sha;
+          hideSyncStatus();
+        });
+      })
+      .catch(function (err) {
+        showSyncStatus("Salvataggio fallito: " + (err && err.message ? err.message : "errore"), true);
+      })
+      .then(function () {
+        publishing = false;
+        if (publishAgain) { publishAgain = false; doPublish(); }
+      });
+  }
+
+  function schedulePublish() {
+    if (publishTimer) clearTimeout(publishTimer);
+    publishTimer = setTimeout(function () { publishTimer = null; doPublish(); }, 600);
+  }
+
+  function handleDotClick(country, person) {
+    STATE[country][person] = NEXT[STATE[country][person]];
+    renderAll();
+    schedulePublish();
+  }
+
+  function onTableClick(e) {
+    var headBtn = e.target.closest(".head-btn");
+    if (headBtn) { handleSortClick(headBtn.dataset.sort); return; }
+    var btn = e.target.closest(".dot");
+    if (!btn) return;
+    handleDotClick(btn.dataset.country, btn.dataset.person);
+  }
+
+  document.getElementById("app").addEventListener("click", onTableClick);
+  document.getElementById("extra").addEventListener("click", onTableClick);
+
+  showSyncStatus("Caricamento…", false);
+  loadState()
+    .then(function () { hideSyncStatus(); renderAll(); })
+    .catch(function (err) {
+      STATE = defaultState();
+      renderAll();
+      showSyncStatus("Caricamento fallito: " + (err && err.message ? err.message : "errore"), true);
+    });
+})();
+</script>
+</body>
+</html>
