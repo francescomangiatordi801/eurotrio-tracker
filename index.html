@@ -94,6 +94,9 @@
   }
   .add-row select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .row { display: grid; grid-template-columns: 1fr repeat(3, 30px); align-items: center; gap: 6px 10px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
+  .table--extra .row { grid-template-columns: 1fr repeat(3, 30px) 22px; }
+  .remove-btn { all: unset; cursor: pointer; justify-self: center; color: var(--faint); font-size: 1.1rem; line-height: 1; padding: 2px; border-radius: 3px; }
+  .remove-btn:hover { color: var(--red); }
   .row--head { border-bottom: 1px solid var(--faint); padding-bottom: 10px; }
   .row--head .name { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
   .head-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border-radius: 3px; }
@@ -118,6 +121,7 @@
   #sync-status.sync-status--error { color: var(--red); }
   @media (max-width: 420px) {
     .row { grid-template-columns: 1fr repeat(3, 26px); gap: 5px 8px; }
+    .table--extra .row { grid-template-columns: 1fr repeat(3, 26px) 20px; }
     .dot { width: 22px; height: 22px; }
     .summary { gap: 8px; }
     .stat { padding: 12px; }
@@ -375,7 +379,7 @@
   function extraHeadRowHTML() {
     var html = '<div class="row row--head"><span class="head-btn--name">Paese</span><div class="dots">';
     PEOPLE.forEach(function (p) { html += '<span class="head-btn--col">' + PEOPLE_LABEL[p] + "</span>"; });
-    html += "</div></div>";
+    html += "</div><span></span></div>";
     return html;
   }
 
@@ -393,7 +397,8 @@
         var label = PEOPLE_LABEL[p] + ", " + c.name + ": " + LABEL[status];
         return '<button type="button" class="dot dot--' + status + '" data-country="' + c.id + '" data-person="' + p + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></button>';
       }).join("");
-      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + flagForCode(c.code) + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
+      var removeLabel = "Rimuovi " + c.name;
+      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + flagForCode(c.code) + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + '</div><button type="button" class="remove-btn" data-remove="' + c.id + '" title="' + escapeHtml(removeLabel) + '" aria-label="' + escapeHtml(removeLabel) + '">×</button></div>';
     }).join("");
     container.innerHTML = extraHeadRowHTML() + body;
   }
@@ -419,6 +424,13 @@
     }
     EXTRA_LIST.push({ id: id, name: opt.name, code: opt.code });
     if (!STATE[id]) STATE[id] = { gamba: "none", beppe: "none", rutix: "none" };
+    renderExtra();
+    schedulePublish();
+  }
+
+  function removeExtraCountry(id) {
+    EXTRA_LIST = EXTRA_LIST.filter(function (c) { return c.id !== id; });
+    delete STATE[id];
     renderExtra();
     schedulePublish();
   }
@@ -544,6 +556,8 @@
   function onTableClick(e) {
     var headBtn = e.target.closest(".head-btn");
     if (headBtn) { handleSortClick(headBtn.dataset.sort); return; }
+    var removeBtn = e.target.closest(".remove-btn");
+    if (removeBtn) { removeExtraCountry(removeBtn.dataset.remove); return; }
     var btn = e.target.closest(".dot");
     if (!btn) return;
     handleDotClick(btn.dataset.country, btn.dataset.person);
