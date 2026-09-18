@@ -81,36 +81,18 @@
   .extra-heading { display: flex; align-items: baseline; gap: 10px; font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.05rem; padding-bottom: 10px; }
   .extra-note { font-family: "Work Sans", sans-serif; font-weight: 400; font-size: 0.82rem; color: var(--faint); }
   .extra-empty { color: var(--faint); font-size: 0.9rem; padding: 10px 4px; }
-  .add-row { display: flex; gap: 8px; margin-top: 14px; }
-  .add-row input {
-    flex: 1;
-    min-width: 0;
+  .add-row { margin-top: 14px; }
+  .add-row select {
+    width: 100%;
     font: inherit;
     font-size: 0.95rem;
-    padding: 9px 12px;
+    padding: 10px 12px;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--surface);
     color: var(--ink);
   }
-  .add-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .add-row button {
-    all: unset;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 1.3rem;
-    line-height: 1;
-  }
-  .add-row button:hover { background: var(--accent-ink); }
-  .add-row button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .add-row select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .row { display: grid; grid-template-columns: 1fr repeat(3, 30px); align-items: center; gap: 6px 10px; padding: 9px 4px; border-bottom: 1px solid var(--line); }
   .row--head { border-bottom: 1px solid var(--faint); padding-bottom: 10px; }
   .row--head .name { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
@@ -166,8 +148,7 @@
     <div class="extra-heading">Paesi Extraeuropei<span class="extra-note">non contano nel totale sopra</span></div>
     <div id="extra-rows"></div>
     <div class="add-row">
-      <input type="text" id="extra-input" placeholder="Aggiungi un paese…" maxlength="40" autocomplete="off">
-      <button type="button" id="extra-add-btn" aria-label="Aggiungi paese">+</button>
+      <select id="extra-select" aria-label="Aggiungi un paese"></select>
     </div>
   </section>
 
@@ -256,66 +237,68 @@
     return s;
   }
 
-  var ISO_BY_NAME = {
-    "afghanistan": "AF", "albania": "AL", "algeria": "DZ", "arabia saudita": "SA",
-    "argentina": "AR", "armenia": "AM", "australia": "AU", "austria": "AT",
-    "azerbaigian": "AZ", "bahamas": "BS", "bahrein": "BH", "bangladesh": "BD",
-    "belgio": "BE", "bielorussia": "BY", "birmania": "MM", "myanmar": "MM",
-    "bolivia": "BO", "bosnia": "BA", "botswana": "BW", "brasile": "BR",
-    "bulgaria": "BG", "burkina faso": "BF", "cambogia": "KH", "camerun": "CM",
-    "canada": "CA", "capo verde": "CV", "ciad": "TD", "cile": "CL", "cina": "CN",
-    "cipro": "CY", "colombia": "CO", "corea del nord": "KP", "corea del sud": "KR",
-    "corea": "KR", "costa davorio": "CI", "costa d'avorio": "CI", "costa rica": "CR",
-    "croazia": "HR", "cuba": "CU", "danimarca": "DK", "ecuador": "EC", "egitto": "EG",
-    "el salvador": "SV", "emirati arabi uniti": "AE", "dubai": "AE", "eritrea": "ER",
-    "estonia": "EE", "etiopia": "ET", "figi": "FJ", "fiji": "FJ", "filippine": "PH",
-    "finlandia": "FI", "francia": "FR", "gabon": "GA", "galles": "GB-WLS",
-    "gambia": "GM", "georgia": "GE", "germania": "DE", "ghana": "GH",
-    "giamaica": "JM", "giappone": "JP", "giordania": "JO", "grecia": "GR",
-    "groenlandia": "GL", "guatemala": "GT", "guinea": "GN", "haiti": "HT",
-    "honduras": "HN", "hong kong": "HK", "india": "IN", "indonesia": "ID",
-    "inghilterra": "GB-ENG", "iran": "IR", "iraq": "IQ", "irlanda": "IE",
-    "irlanda del nord": "GB-NIR", "islanda": "IS", "islanda": "IS",
-    "israele": "IL", "italia": "IT", "kazakistan": "KZ", "kenya": "KE",
-    "kirghizistan": "KG", "kosovo": "XK", "kuwait": "KW", "laos": "LA",
-    "lettonia": "LV", "libano": "LB", "liberia": "LR", "libia": "LY",
-    "liechtenstein": "LI", "lituania": "LT", "lussemburgo": "LU",
-    "macedonia del nord": "MK", "madagascar": "MG", "malawi": "MW",
-    "malesia": "MY", "maldive": "MV", "mali": "ML", "malta": "MT",
-    "marocco": "MA", "mauritania": "MR", "mauritius": "MU", "messico": "MX",
-    "moldavia": "MD", "monaco": "MC", "mongolia": "MN", "montenegro": "ME",
-    "mozambico": "MZ", "namibia": "NA", "nepal": "NP", "nicaragua": "NI",
-    "niger": "NE", "nigeria": "NG", "norvegia": "NO", "nuova zelanda": "NZ",
-    "oman": "OM", "paesi bassi": "NL", "olanda": "NL", "pakistan": "PK",
-    "panama": "PA", "papua nuova guinea": "PG", "paraguay": "PY", "peru": "PE",
-    "perù": "PE", "polonia": "PL", "portogallo": "PT", "qatar": "QA",
-    "regno unito": "GB", "repubblica ceca": "CZ", "repubblica dominicana": "DO",
-    "romania": "RO", "ruanda": "RW", "russia": "RU", "san marino": "SM",
-    "scozia": "GB-SCT", "senegal": "SN", "serbia": "RS", "singapore": "SG",
-    "siria": "SY", "slovacchia": "SK", "slovenia": "SI", "somalia": "SO",
-    "spagna": "ES", "sri lanka": "LK", "stati uniti": "US", "usa": "US",
-    "sudafrica": "ZA", "sudan": "SD", "svezia": "SE", "svizzera": "CH",
-    "tagikistan": "TJ", "taiwan": "TW", "tanzania": "TZ", "thailandia": "TH",
-    "togo": "TG", "tunisia": "TN", "turchia": "TR", "turkmenistan": "TM",
-    "ucraina": "UA", "uganda": "UG", "ungheria": "HU", "uruguay": "UY",
-    "uzbekistan": "UZ", "vaticano": "VA", "venezuela": "VE", "vietnam": "VN",
-    "yemen": "YE", "zambia": "ZM", "zimbabwe": "ZW", "andorra": "AD"
-  };
+  var EXTRA_OPTIONS = [
+    { name: "Afghanistan", code: "AF" }, { name: "Arabia Saudita", code: "SA" },
+    { name: "Argentina", code: "AR" }, { name: "Armenia", code: "AM" },
+    { name: "Australia", code: "AU" }, { name: "Azerbaigian", code: "AZ" },
+    { name: "Bahamas", code: "BS" }, { name: "Bahrein", code: "BH" },
+    { name: "Bangladesh", code: "BD" }, { name: "Birmania", code: "MM" },
+    { name: "Bolivia", code: "BO" }, { name: "Botswana", code: "BW" },
+    { name: "Brasile", code: "BR" }, { name: "Burkina Faso", code: "BF" },
+    { name: "Cambogia", code: "KH" }, { name: "Camerun", code: "CM" },
+    { name: "Canada", code: "CA" }, { name: "Capo Verde", code: "CV" },
+    { name: "Ciad", code: "TD" }, { name: "Cile", code: "CL" },
+    { name: "Cina", code: "CN" }, { name: "Colombia", code: "CO" },
+    { name: "Corea del Nord", code: "KP" }, { name: "Corea del Sud", code: "KR" },
+    { name: "Costa d'Avorio", code: "CI" }, { name: "Costa Rica", code: "CR" },
+    { name: "Cuba", code: "CU" }, { name: "Ecuador", code: "EC" },
+    { name: "Egitto", code: "EG" }, { name: "El Salvador", code: "SV" },
+    { name: "Emirati Arabi Uniti", code: "AE" }, { name: "Eritrea", code: "ER" },
+    { name: "Etiopia", code: "ET" }, { name: "Figi", code: "FJ" },
+    { name: "Filippine", code: "PH" }, { name: "Gabon", code: "GA" },
+    { name: "Gambia", code: "GM" }, { name: "Georgia", code: "GE" },
+    { name: "Ghana", code: "GH" }, { name: "Giamaica", code: "JM" },
+    { name: "Giappone", code: "JP" }, { name: "Giordania", code: "JO" },
+    { name: "Groenlandia", code: "GL" }, { name: "Guatemala", code: "GT" },
+    { name: "Guinea", code: "GN" }, { name: "Haiti", code: "HT" },
+    { name: "Honduras", code: "HN" }, { name: "Hong Kong", code: "HK" },
+    { name: "India", code: "IN" }, { name: "Indonesia", code: "ID" },
+    { name: "Iran", code: "IR" }, { name: "Iraq", code: "IQ" },
+    { name: "Israele", code: "IL" }, { name: "Kazakistan", code: "KZ" },
+    { name: "Kenya", code: "KE" }, { name: "Kirghizistan", code: "KG" },
+    { name: "Kuwait", code: "KW" }, { name: "Laos", code: "LA" },
+    { name: "Libano", code: "LB" }, { name: "Liberia", code: "LR" },
+    { name: "Libia", code: "LY" }, { name: "Madagascar", code: "MG" },
+    { name: "Malawi", code: "MW" }, { name: "Malesia", code: "MY" },
+    { name: "Maldive", code: "MV" }, { name: "Mali", code: "ML" },
+    { name: "Marocco", code: "MA" }, { name: "Mauritania", code: "MR" },
+    { name: "Mauritius", code: "MU" }, { name: "Messico", code: "MX" },
+    { name: "Mongolia", code: "MN" }, { name: "Mozambico", code: "MZ" },
+    { name: "Namibia", code: "NA" }, { name: "Nepal", code: "NP" },
+    { name: "Nicaragua", code: "NI" }, { name: "Niger", code: "NE" },
+    { name: "Nigeria", code: "NG" }, { name: "Nuova Zelanda", code: "NZ" },
+    { name: "Oman", code: "OM" }, { name: "Pakistan", code: "PK" },
+    { name: "Panama", code: "PA" }, { name: "Papua Nuova Guinea", code: "PG" },
+    { name: "Paraguay", code: "PY" }, { name: "Perù", code: "PE" },
+    { name: "Qatar", code: "QA" }, { name: "Repubblica Dominicana", code: "DO" },
+    { name: "Ruanda", code: "RW" }, { name: "Senegal", code: "SN" },
+    { name: "Singapore", code: "SG" }, { name: "Siria", code: "SY" },
+    { name: "Somalia", code: "SO" }, { name: "Sri Lanka", code: "LK" },
+    { name: "Stati Uniti", code: "US" }, { name: "Sudafrica", code: "ZA" },
+    { name: "Sudan", code: "SD" }, { name: "Tagikistan", code: "TJ" },
+    { name: "Taiwan", code: "TW" }, { name: "Tanzania", code: "TZ" },
+    { name: "Thailandia", code: "TH" }, { name: "Togo", code: "TG" },
+    { name: "Tunisia", code: "TN" }, { name: "Turkmenistan", code: "TM" },
+    { name: "Uganda", code: "UG" }, { name: "Uruguay", code: "UY" },
+    { name: "Uzbekistan", code: "UZ" }, { name: "Venezuela", code: "VE" },
+    { name: "Vietnam", code: "VN" }, { name: "Yemen", code: "YE" },
+    { name: "Zambia", code: "ZM" }, { name: "Zimbabwe", code: "ZW" }
+  ].sort(function (a, b) { return a.name.localeCompare(b.name, "it"); });
 
-  function flagForName(name) {
-    var key = name.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-    var code = ISO_BY_NAME[key];
+  function flagForCode(code) {
     if (!code || code.length !== 2) return "🏳️";
     var A = 0x1F1E6;
     return String.fromCodePoint(A + (code.charCodeAt(0) - 65), A + (code.charCodeAt(1) - 65));
-  }
-
-  function slugify(str) {
-    var slug = str.trim().toLowerCase()
-      .normalize("NFD").replace(/[̀-ͯ]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    return slug || "paese";
   }
 
   function arrowFor(key) {
@@ -409,30 +392,32 @@
         var label = PEOPLE_LABEL[p] + ", " + c.name + ": " + LABEL[status];
         return '<button type="button" class="dot dot--' + status + '" data-country="' + c.id + '" data-person="' + p + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></button>';
       }).join("");
-      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + flagForName(c.name) + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
+      return '<div class="row"><span class="name"><span class="flag" aria-hidden="true">' + flagForCode(c.code) + '</span>' + escapeHtml(c.name) + '</span><div class="dots">' + dots + "</div></div>";
     }).join("");
     container.innerHTML = extraHeadRowHTML() + body;
   }
 
-  function addExtraCountry(rawName) {
-    var name = (rawName || "").trim();
-    if (!name) return;
-    var exists = EXTRA_LIST.some(function (c) { return c.name.toLowerCase() === name.toLowerCase(); });
+  function populateExtraSelect() {
+    var select = document.getElementById("extra-select");
+    var html = '<option value="">Aggiungi un paese…</option>';
+    html += EXTRA_OPTIONS.map(function (o) {
+      return '<option value="' + o.code + '">' + flagForCode(o.code) + " " + escapeHtml(o.name) + "</option>";
+    }).join("");
+    select.innerHTML = html;
+  }
+
+  function addExtraCountry(code) {
+    var opt = EXTRA_OPTIONS.filter(function (o) { return o.code === code; })[0];
+    if (!opt) return;
+    var id = opt.code.toLowerCase();
+    var exists = EXTRA_LIST.some(function (c) { return c.id === id; });
     if (exists) {
-      showSyncStatus("«" + name + "» è già in lista", true);
+      showSyncStatus("«" + opt.name + "» è già in lista", true);
       setTimeout(hideSyncStatus, 1800);
       return;
     }
-    var id = slugify(name);
-    var existingIds = EXTRA_LIST.map(function (c) { return c.id; }).concat(Object.keys(STATE));
-    var uniqueId = id;
-    var n = 2;
-    while (existingIds.indexOf(uniqueId) !== -1) {
-      uniqueId = id + "-" + n;
-      n++;
-    }
-    EXTRA_LIST.push({ id: uniqueId, name: name });
-    STATE[uniqueId] = { gamba: "none", beppe: "none", rutix: "none" };
+    EXTRA_LIST.push({ id: id, name: opt.name, code: opt.code });
+    if (!STATE[id]) STATE[id] = { gamba: "none", beppe: "none", rutix: "none" };
     renderExtra();
     schedulePublish();
   }
@@ -566,15 +551,11 @@
   document.getElementById("app").addEventListener("click", onTableClick);
   document.getElementById("extra").addEventListener("click", onTableClick);
 
-  function submitExtraInput() {
-    var input = document.getElementById("extra-input");
-    addExtraCountry(input.value);
-    input.value = "";
-    input.focus();
-  }
-  document.getElementById("extra-add-btn").addEventListener("click", submitExtraInput);
-  document.getElementById("extra-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") submitExtraInput();
+  populateExtraSelect();
+  document.getElementById("extra-select").addEventListener("change", function (e) {
+    var code = e.target.value;
+    e.target.value = "";
+    if (code) addExtraCountry(code);
   });
 
   showSyncStatus("Caricamento…", false);
